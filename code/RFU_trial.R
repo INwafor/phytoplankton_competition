@@ -44,8 +44,7 @@ str(scen)
 plate_plot(
   data = scen,
   position = Well,
-  value = RFU,
-  label = RFU,
+  value = `Dilution Factor`,
   plate_size = 96,
   colour = c(
   "#51127CFF",
@@ -54,3 +53,20 @@ plate_plot(
   "#FCFDBFFF"),
   plate_type = "round"
 )
+
+
+scen_19 <- read_excel("data/fluorescence_standard_data.xlsx", sheet = "scenedesmus") %>%
+  mutate(Date = "Jan 19") %>%
+  select(-c("Algal Concentration - hemocytomer?")) %>%
+  mutate(Row = substr(Well, 1, 1))
+
+plate_plot(
+  data = scen_19,
+  position = Well,
+  value = `Dilution Factor`,
+  plate_size = 96,
+  scale = 1.3,
+  plate_type = "round",
+  title = "Scenedesmus Dilution Test",
+  title_size = 23,
+  colour = c("#3a1c71","#B63679FF","#d76d77", "#ffaf7b", "#FCFDBFFF"))
