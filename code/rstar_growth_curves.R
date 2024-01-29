@@ -13,14 +13,13 @@ library(cowplot)
 ## average the wells and take that? remember to account for resource concentration!
 
 #scenedesmus
-jan27_scen <- read_excel("data/Rstar_experiment.xlsx", sheet = "scenedesmus_21C")%>%
-  mutate(unique_well = paste(Well, hour, Treatment, sep = "_"))
+jan29_scen <- read_excel("data/Rstar_experiment.xlsx", sheet = "scenedesmus_21C")%>%
+  mutate(unique_well = paste(Well, hour,`Resource Concentration`, sep = "_"))
 
-jan27_scen <- jan27_scen[!(row.names(jan27_scen) %in% c("1")),]
+jan29_scen <- jan29_scen[!(row.names(jan29_scen) %in% c("1")),]
 
-jan27_scen %>% 
-  ggplot(aes( x = hour, y = RFU, colour = Treatment, group = unique_well))+
-  geom_point(aes(shape = Treatment), size = 1.5) +
+jan29_scen %>% 
+  ggplot(aes( x = hour, y = RFU, colour = `Resource Concentration`, group = unique_well))+
   theme_minimal() +
   facet_wrap(~Well, scales = "free_y") +
   geom_line(aes(x = hour, y = RFU, group = Well)) +
