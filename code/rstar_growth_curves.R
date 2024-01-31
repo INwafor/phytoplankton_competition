@@ -37,3 +37,21 @@ jan27_fist %>%
   facet_wrap(~Well, scales = "free_y") +
   geom_line(aes(x = hour, y = RFU, group = Well)) +
   ggtitle('Fistulifera 24 hours')
+
+## January 31st R* Analysis 
+fistulifera <- read_excel("data/Rstar_experiment_final.xlsx", sheet = "fistulifera_21C") %>%
+  mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
+fistulifera <- fistulifera[!(row.names(fistulifera) %in% c("1")),]
+
+scenedesmus <- read_excel("data/Rstar_experiment_final.xlsx", sheet = "scenedesmus_21C") %>%
+  mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
+scenedesmus <- scenedesmus[!(row.names(scenedesmus) %in% c("1")),]
+
+## need to fix scale, remove NA, change colour and line thickness
+scenedesmus %>%
+  ggplot(aes(x = Hour, y = RFU, colour = Treatment, group = unique_wel))+
+  theme_minimal() +
+  facet_wrap(~R_Concentration, ncol = 4) +
+  geom_line(aes(x = Hour, y = RFU, group = Well)) +
+  ggtitle('Scenedesmus Phosphate Experiment 1')
+
