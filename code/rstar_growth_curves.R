@@ -47,7 +47,7 @@ scenedesmus <- read_excel("data/Rstar_experiment_final.xlsx", sheet = "scenedesm
   mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
 scenedesmus <- scenedesmus[!(row.names(scenedesmus) %in% c("1")),]
 
-## need to fix scale, remove NA, change colour and line thickness
+## need to fix scale, remove NA, change colour and line thickness, give grid 
 scenedesmus %>%
   ggplot(aes(x = Hour, y = RFU, colour = Treatment, group = unique_wel))+
   theme_minimal() +
