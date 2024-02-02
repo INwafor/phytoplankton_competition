@@ -47,11 +47,25 @@ scenedesmus <- read_excel("data/Rstar_experiment_final.xlsx", sheet = "scenedesm
   mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
 scenedesmus <- scenedesmus[!(row.names(scenedesmus) %in% c("1")),]
 
+scen <- scenedesmus %>% 
+  mutate(RFU = as.numeric(RFU)) %>% 
+  mutate(Hour = as.numeric(Hour)) %>% 
+  mutate(R_Concentration = as.numeric(R_Concentration))
+str(scen)
+
 ## need to fix scale, remove NA, change colour and line thickness, give grid 
-scenedesmus %>%
+scen %>%
   ggplot(aes(x = Hour, y = RFU, colour = Treatment, group = unique_wel))+
-  theme_minimal() +
+  theme_light() +
   facet_wrap(~R_Concentration, ncol = 4) +
-  geom_line(aes(x = Hour, y = RFU, group = Well)) +
+  geom_point(aes(x = Hour, y = RFU, group = Well)) +
   ggtitle('Scenedesmus Phosphate Experiment 1')
 
+##fit to exponential growth / models - potential issue with media?   
+
+fistulifera %>%
+  ggplot(aes(x = Hour, y = RFU, colour = Treatment, group = unique_wel))+
+  theme_light() +
+  facet_wrap(~R_Concentration, ncol = 4) +
+  geom_line(aes(x = Hour, y = RFU, group = Well)) +
+  ggtitle('Fistulifera Phosphate Experiment 1')
