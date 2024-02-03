@@ -39,6 +39,9 @@ jan27_fist %>%
   ggtitle('Fistulifera 24 hours')
 
 ## January 31st R* Analysis 
+fulldataset <- read_excel("data/Rstar_experiment_final.xlsx") %>%
+  mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
+
 fistulifera <- read_excel("data/Rstar_experiment_final.xlsx", sheet = "fistulifera_21C") %>%
   mutate(unique_well = paste(Well, Hour, R_Concentration, sep = "_"))
 fistulifera <- fistulifera[!(row.names(fistulifera) %in% c("1")),]
@@ -69,3 +72,5 @@ fistulifera %>%
   facet_wrap(~R_Concentration, ncol = 4) +
   geom_line(aes(x = Hour, y = RFU, group = Well)) +
   ggtitle('Fistulifera Phosphate Experiment 1')
+
+write.csv(fulldataset, "C:\\Users\\Ijeoma\\Desktop\\r_star_experiment.csv", row.names=FALSE)
