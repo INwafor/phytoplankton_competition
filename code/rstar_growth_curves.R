@@ -73,7 +73,7 @@ fistulifera %>%
   geom_line(aes(x = Hour, y = RFU, group = Well)) +
   ggtitle('Fistulifera Phosphate Experiment 1')
 
-write.csv(fulldataset, "C:\\Users\\Ijeoma\\Desktop\\r_star_experiment.csv", row.names=FALSE)
+#write.csv(fulldataset, "C:\\Users\\Ijeoma\\Desktop\\r_star_experiment.csv", row.names=FALSE)
 
 
 ##joeys script - edit
