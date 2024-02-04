@@ -74,3 +74,49 @@ fistulifera %>%
   ggtitle('Fistulifera Phosphate Experiment 1')
 
 write.csv(fulldataset, "C:\\Users\\Ijeoma\\Desktop\\r_star_experiment.csv", row.names=FALSE)
+
+
+##joeys script - edit
+library(tidyverse)
+library(cowplot)
+library(broom)
+theme_set(theme_cowplot())
+
+
+sdata_raw_names <- read_csv("data-raw/r_star_experiment.csv") %>% 
+  colnames()
+
+sdata <- read_csv("data-raw/r_star_experiment.csv", skip = 2, col_names = sdata_raw_names) %>% 
+  mutate(resource_level = as.factor(R_Concentration)) %>% 
+  filter(!is.na(resource_level))
+
+sdata2 <- sdata %>% 
+  separate_wider_delim(unique_well, delim = "_", names = c("well", "time", "resource")) %>% 
+  mutate(days = Hour/24)
+
+well_key <- sdata %>% 
+  select(Well, resource_level) %>% 
+  distinct() %>% 
+  rename(well = Well)
+
+
+
+sdata2 %>% 
+  ggplot(aes(x = days, y = log(RFU), group = well, color = Treatment)) + geom_line() +
+  geom_point() +
+  facet_wrap( ~ resource_level)
+
+growth <- sdata2 %>% 
+  filter(Treatment != "Blank") %>% 
+  group_by(well) %>% 
+  do(tidy(lm(log(RFU) ~ days, data = .))) 
+
+
+growth2 <- growth %>% 
+  left_join(well_key)
+
+
+growth2 %>% 
+  filter(term == "days") %>% 
+  ggplot(aes(x = resource_level, y = estimate)) + geom_point() +
+  ylab("growth rate (per day)") + xlab("resource level")
