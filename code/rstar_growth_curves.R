@@ -83,10 +83,10 @@ library(broom)
 theme_set(theme_cowplot())
 
 
-sdata_raw_names <- read_csv("data-raw/r_star_experiment.csv") %>% 
+sdata_raw_names <-  read_excel("data/Rstar_experiment_final.xlsx") %>% 
   colnames()
 
-sdata <- read_csv("data-raw/r_star_experiment.csv", skip = 2, col_names = sdata_raw_names) %>% 
+sdata <- read_excel("data/Rstar_experiment_final.xlsx", skip = 2, col_names = sdata_raw_names) %>% 
   mutate(resource_level = as.factor(R_Concentration)) %>% 
   filter(!is.na(resource_level))
 
@@ -98,7 +98,6 @@ well_key <- sdata %>%
   select(Well, resource_level) %>% 
   distinct() %>% 
   rename(well = Well)
-
 
 
 sdata2 %>% 
