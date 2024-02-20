@@ -14,8 +14,10 @@ library(readxl)
 library(cowplot) 
 theme_set(theme_cowplot())
 
+##not found?
+plate_layout <- read_excel("data/plate_template.xlsx", sheet = "R* plates")
 
-scen_8C_00 <- read_excel("data-raw/Scen_8C_00.xlsx", range = "A40:CL137")
+scen_8C_00 <- read_excel("data/rstar 2/Scen_8C_00.xlsx", range = "A40:CL137")
 
 ### this is one way of assigning treatments to wells. Alternatively, you could list out all the wells in an csv or xls file with their treatments and then do a left join. This would be my preferred appraoach
 ## how to do the left join
