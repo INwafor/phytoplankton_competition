@@ -12,21 +12,31 @@ library(ggplot2)
 library(tidyverse)
 library(readxl)
 library(cowplot) 
+library(janitor)
+library(lubridate)
 theme_set(theme_cowplot())
 
-##not found?
-plate_layout <- read_excel("data/plate_template.xlsx", sheet = "R* plates")
+##have the plate layout which includes the well, treatment and resource level - NO NEED TO LEFT JOIN?
+plate_layout_r <- read_excel("data/plate_template.xlsx", sheet = "rstar_plates") %>%
+  mutate(R_Concentration = as.numeric(R_Concentration))
 
-scen_8C_00 <- read_excel("data/rstar 2/Scen_8C_00.xlsx", range = "A40:CL137")
+plate_layout_c <- read_excel("data/plate_template.xlsx", sheet = "competition_plate") %>%
+  mutate(R_Concentration = as.numeric(R_Concentration))
 
-### this is one way of assigning treatments to wells. Alternatively, you could list out all the wells in an csv or xls file with their treatments and then do a left join. This would be my preferred appraoach
-## how to do the left join
-scen_8C_00 %>% 
-  mutate(treatment = case_when(str_detect(well, "A") ~ "Blank",
-                               str_detect(well, "B") ~ "ftz1",
-                               str_detect(well, "C") ~ "ftz2",
-                               str_detect(well, "D") ~ "ftz3",
-                               str_detect(well, "E") ~ "casp1",
-                               str_detect(well, "F") ~ "casp2",
-                               str_detect(well, "G") ~ "casp3",
-                               str_detect(well, "H") ~ "Blank")) 
+
+RFU_files <- c(list.files("data/rstar 2", full.names = TRUE))
+
+RFU_files <- RFU_files[grepl(".xls", RFU_files)]
+
+names(RFU_files) <- RFU_files %>% 
+  gsub(pattern = ".xlsx$", replacement = "") %>% 
+  gsub(pattern = ".xls$", replacement = "")
+
+## what does this do - row = X__1 does not exist
+all_plates <- map_df(RFU_files, read_excel, range = "B16:M23", .id = "file_name") 
+
+%>%
+  rename(row = X__1) %>% 
+  filter(!grepl("dilution", file_name)) %>% 
+  mutate(file_name = str_replace(file_name, " ", ""))
+
