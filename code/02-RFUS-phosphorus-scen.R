@@ -71,7 +71,7 @@ all_plates2 <- all_plates2 %>%
 view(all_plates2)
 
 
-## saying that the column isnt present ? because its not in both ?
+## saying that the column isnt present ? where i get stuck trying to add in my well key layout
 all_temp_RFU <- all_plates2 %>% 
   gather(key = row, value = RFU, 3:14) %>%
   mutate(row = as.character(row)) 
