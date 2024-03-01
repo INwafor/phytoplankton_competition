@@ -17,11 +17,12 @@ library(lubridate)
 theme_set(theme_cowplot())
 
 ##have the plate layout which includes the well, treatment and resource level - NO NEED TO LEFT JOIN?
-plate_layout_s <- read_excel("data/plate_template.xlsx", sheet = "rstar_plates") %>%
+plate_layout <- read_excel("data/plate_template.xlsx", sheet = "rstar_plates") %>%
   clean_names() %>%
-  mutate(r_concentration = as.numeric(r_concentration))
+  mutate(r_concentration = as.numeric(r_concentration)) %>%
+  mutate(well = as.character(well))
 
-plate_layout_s <- plate_layout_s[!(row.names(plate_layout_s) %in% c("1")),]
+plate_layout <- plate_layout[!(row.names(plate_layout) %in% c("1")),]
 
 RFU_files <- c(list.files("data/rstar_dataraw", full.names = TRUE))
 
@@ -31,25 +32,76 @@ names(RFU_files) <- RFU_files %>%
   gsub(pattern = ".xlsx$", replacement = "") %>% 
   gsub(pattern = ".xls$", replacement = "")
 
-##what is all plates - what is it showing/why 
-all_plates <- map_df(RFU_files, read_excel, range = "B16:M23", .id = "file_name") %>%
-  mutate(file_name = str_replace(file_name, " ", ""))
+all_plates <- map_df(RFU_files, read_excel, range = "A15:M23", .id = "file_name")%>%
+  rename(row = ...1) %>% 
+  mutate(file_name = str_replace(file_name, " ", "")) %>%
+  separate(file_name, into = c("data", "location", "loc_2", "file_name", "temp", "read"), remove = FALSE)%>%
+  select(-data,
+         -location,
+         -loc_2)
+
+all_plates <- unite(all_plates, file_name, c(file_name, temp, read))
 view(all_plates)
 
 all_times <- map_df(RFU_files, read_excel, range = "A7:A8", .id = "file_name") %>% 
   clean_names()
-
-#separate by day? how to remove time:
+  
 all_times <- all_times %>%
   rename("Day 1" = "date_2_14_2024",
          "Day 2" = "date_2_15_2024",
          "Day 3" = "date_2_16_2024",
          "Day 4" = "date_2_17_2024")
 
-##want to fix and remove time: crap but not change the column 
 all_times <- all_times %>% separate(file_name, into = c("data", "location", "loc_2", "file_name", "temp", "read"), remove = FALSE) %>%
   select(-data,
          -location,
          -loc_2)
-view(all_times)
- 
+all_times$`Day 1` <- gsub("Time: ", "", as.character(all_times$`Day 1`))
+all_times$`Day 2` <- gsub("Time: ", "", as.character(all_times$`Day 2`))
+all_times$`Day 3` <- gsub("Time: ", "", as.character(all_times$`Day 3`))
+all_times$`Day 4` <- gsub("Time: ", "", as.character(all_times$`Day 4`))
+
+all_times <- unite(all_times, file_name, c(file_name, temp, read))
+
+all_plates2 <- dplyr::left_join(all_plates, all_times, by = "file_name")
+
+all_plates2 <- all_plates2 %>%
+  mutate(row = as.character(row))
+
+view(all_plates2)
+
+
+## saying that the column isnt present ? because its not in both ?
+all_temp_RFU <- all_plates2 %>% 
+  gather(key = row, value = RFU, 3:14) %>%
+  mutate(row = as.character(row)) 
+
+all_temp_RFU2 <- left_join(plate_layout, all_temp_RFU, by = "well")
+
+view(all_temp_RFU)
+
+  unite(all_plates2, col = "well", remove = FALSE, sep = "") 
+  mutate(column = formatC(column, width = 2, flag = 0)) %>% 
+  mutate(column = str_replace(column, " ", "0")) %>% 
+  unite(col = well, row, column, sep = "") %>% 
+  filter(!is.na(RFU))
+
+
+
+all_rfus_raw <- left_join(all_temp_RFU, plate_info, by = c("well"))
+
+
+
+all_rfus2 <- all_rfus_raw %>%
+  unite(col = date_time, Date, time, sep = " ") %>%
+  mutate(date_time = ymd_hms(date_time)) %>% 
+  mutate(population = ifelse(population == "cc1629", "COMBO", population))
+
+
+all_rfus3 <- all_rfus2 %>% 
+  group_by(n_level) %>% 
+  mutate(start_time = min(date_time)) %>% 
+  mutate(days = interval(start_time, date_time)/ddays(1)) %>% 
+  unite(col = well_plate, well, plate, remove =  FALSE) %>% 
+  separate(col = n_level, sep = 1, into = c("p", "phosphate_level")) %>% 
+  mutate(phosphate_level = as.numeric(phosphate_level))
