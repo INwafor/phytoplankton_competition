@@ -56,6 +56,7 @@ all_times <- all_times %>% separate(file_name, into = c("data", "location", "loc
   select(-data,
          -location,
          -loc_2)
+
 all_times$`Day 1` <- gsub("Time: ", "", as.character(all_times$`Day 1`))
 all_times$`Day 2` <- gsub("Time: ", "", as.character(all_times$`Day 2`))
 all_times$`Day 3` <- gsub("Time: ", "", as.character(all_times$`Day 3`))
