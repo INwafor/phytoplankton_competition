@@ -116,7 +116,7 @@ growth <- sdata2 %>%
   do(tidy(lm(log(RFU) ~ days, data = .))) 
 
 growth2 <- growth %>% 
-  left_join(well_key)
+  left_join(plate_layout)
 
 growth2 %>% 
   filter(term == "days") %>% 
