@@ -37,8 +37,6 @@ file_hours_new <- file_hours %>%
       read == "07" ~ 3,
       read == "08" ~ 3,
       read == "09" ~ 3,
-      read == "1" ~ 1,
-      read == "4" ~ 2,
       TRUE ~ NA_integer_  # Default value if no condition is met
     )
   )
