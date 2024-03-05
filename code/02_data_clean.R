@@ -70,15 +70,54 @@ all_plates2 <- all_plates2 %>%
 
 view(all_plates2)
 
-
 ## saying that the column isnt present ? where i get stuck trying to add in my well key layout
+all_temp_RFU <- all_plates2 %>% 
+  gather(key = row, value = RFU, 3:14) %>%
+  mutate(row = as.character(row))
+
+num_rows_all_plates2 <- nrow(all_plates2)
+num_repeats <- ceiling(num_rows_all_plates2 / nrow(plate_layout))
+
+# Repeat the rows in plate_layout accordingly
+plate_layout_repeated <- plate_layout[rep(seq_len(nrow(plate_layout)), each = num_repeats), ]
+
 all_temp_RFU <- all_plates2 %>% 
   gather(key = row, value = RFU, 3:14) %>%
   mutate(row = as.character(row)) 
 
-all_temp_RFU2 <- left_join(plate_layout, all_temp_RFU, by = "well")
+letters_vec <- rep(c("A", "B", "C", "D", "E", "F", "G", "H"), length.out = nrow(all_temp_RFU))
 
+# Add the letter column to your dataframe
+all_temp_RFU$well <- letters_vec
+
+  view(all_temp_RFU)
+  
+all_merged <- paste0(all_temp_RFU$well, all_temp_RFU$row)
+
+##all merged says its 5760 
+all_temp_RFU$well_key <- all_merged
+
+repeated_well_key <- rep(well_key, length.out = nrow(all_temp_RFU))
+
+# now we can drop the row and the well - then we have to add r_concentration - then you can graph
+##removing row and well
+all_temp_RFU <- subset(all_temp_RFU, select = -c(row, well))
+
+colnames(all_temp_RFU)[colnames(all_temp_RFU) == "well_key"] <- "well"
+
+##adding in R concentration - now we can left bind with plate layout
+all_merged <- left_join(all_temp_RFU, plate_layout, by = "well")
+
+## Joeys code - not using for this script anymore 
+{
+bind_cols(plate_layout_repeated[c("well", "treatment", "r_concentration")])
 view(all_temp_RFU)
+
+str(all_plates2)
+
+str(plate_layout_repeated)
+
+##if number 1 = a - h t
 
   unite(all_plates2, col = "well", remove = FALSE, sep = "") 
   mutate(column = formatC(column, width = 2, flag = 0)) %>% 
@@ -105,3 +144,4 @@ all_rfus3 <- all_rfus2 %>%
   unite(col = well_plate, well, plate, remove =  FALSE) %>% 
   separate(col = n_level, sep = 1, into = c("p", "phosphate_level")) %>% 
   mutate(phosphate_level = as.numeric(phosphate_level))
+}
