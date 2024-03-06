@@ -10,6 +10,10 @@ library(cowplot)
 library(janitor)
 library(lubridate)
 library(broom)
+library(viridis)
+library(ggsci)
+library(RColorBrewer)
+
 theme_set(theme_cowplot())
 
 #Graphing
@@ -17,12 +21,18 @@ theme_set(theme_cowplot())
 Scen_21C <- final_merge %>%
   filter(grepl("Scen_21C", spec_temp))
 
+Scen_21C <- Scen_21C %>%
+  mutate(r_concentration = factor(r_concentration))
+
 Scen_21C %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = treatment)) + geom_line() +
-  geom_point() +
-  facet_wrap( ~ r_concentration) +
+  filter(r_concentration != 0) %>% 
+  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
+  geom_point(col = "black", shape = 1, alpha = 0.6) + 
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_npg()+
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_21C r*")
+#ggsave("figures/scen_21C_logged", width = 25, height = 20)
 
 Scen_21C_growth <- Scen_21C %>% 
   filter(treatment != "Blank") %>% 
@@ -46,11 +56,13 @@ Scen_30C <- final_merge %>%
   filter(grepl("Scen_30C", spec_temp))
 
 Scen_30C %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = treatment)) + geom_line() +
-  geom_point() +
-  facet_wrap( ~ r_concentration) +
+  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
+  geom_point(col = "black", shape = 1, alpha = 0.6) + 
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis(option = "plasma") +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_30C r*")
+#ggsave("figures/scen_30C_logged", width = 25, height = 20)
 
 Scen_30C_growth <- Scen_30C %>% 
   filter(treatment != "Blank") %>% 
@@ -72,11 +84,13 @@ Scen_8C <- final_merge %>%
   filter(grepl("Scen_8C", spec_temp))
 
 Scen_8C %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = treatment)) + geom_line() +
-  geom_point() +
-  facet_wrap( ~ r_concentration) +
+  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
+  geom_point(col = "black", shape = 1, alpha = 0.6) + 
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis() +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_8C r*")
+#ggsave("figures/scen_8C_logged", width = 25, height = 20)
 
 Scen_8C_growth <- Scen_8C %>% 
   filter(treatment != "Blank") %>% 
@@ -92,3 +106,4 @@ Scen_8C_growth2 %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   ylab("growth rate (per day)") + xlab("resource level") +
   ggtitle ("growth rate - Scen 8C")
+
