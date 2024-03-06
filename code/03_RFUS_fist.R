@@ -30,7 +30,7 @@ Fist_21C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_npg()+
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Fist_21C r*")
-#ggsave("figures/Fist_21C_logged", width = 25, height = 20)
+#ggsave("figures/Fist_21C_logged", width = 15, height = 10)
 
 Fist_21C_growth <- Fist_21C %>% 
   filter(treatment != "Blank") %>% 
@@ -60,7 +60,7 @@ Fist_30C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis(option = "plasma") +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Fist_30C r*")
-#ggsave("figures/Fist_30C_logged", width = 25, height = 20)
+#ggsave("figures/Fist_30C_logged", width = 15, height = 10)
 
 Fist_30C_growth <- Fist_30C %>% 
   filter(treatment != "Blank") %>% 
@@ -88,7 +88,7 @@ Fist_8C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis() +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Fist_8C r*")
-#ggsave("figures/Fist_8C_logged", width = 25, height = 20)
+#ggsave("figures/Fist_8C_logged", width = 15, height = 10)
 
 Fist_8C_growth <- Fist_8C %>% 
   filter(treatment != "Blank") %>% 

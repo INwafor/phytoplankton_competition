@@ -32,7 +32,7 @@ Scen_21C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_npg()+
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_21C r*")
-#ggsave("figures/scen_21C_logged", width = 25, height = 20)
+#ggsave("figures/scen_21C_logged", width = 15, height = 10)
 
 Scen_21C_growth <- Scen_21C %>% 
   filter(treatment != "Blank") %>% 
@@ -62,7 +62,7 @@ Scen_30C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis(option = "plasma") +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_30C r*")
-#ggsave("figures/scen_30C_logged", width = 25, height = 20)
+#ggsave("figures/scen_30C_logged", width = 15, height = 10)
 
 Scen_30C_growth <- Scen_30C %>% 
   filter(treatment != "Blank") %>% 
@@ -90,7 +90,7 @@ Scen_8C %>%
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis() +
   ylab("log(rfu)") + xlab("day") +
   ggtitle("logged Scen_8C r*")
-#ggsave("figures/scen_8C_logged", width = 25, height = 20)
+#ggsave("figures/scen_8C_logged", width = 15, height = 10)
 
 Scen_8C_growth <- Scen_8C %>% 
   filter(treatment != "Blank") %>% 
