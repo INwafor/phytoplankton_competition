@@ -13,3 +13,6 @@
 ## one predictor variable (r* or treatment - categorical?) ( or more than?) - categorical or continuous?
 ## - one variable (categorical): some type of ANOVA if there is equal or unequal variance, Kruskal wallis for non normal distribution and similar variance
 ## - multiple categorical == two factor anova
+
+##might not be able to get growth rates from this data - keep getting negative growth, everything dying
+##try fitting to monod curve
