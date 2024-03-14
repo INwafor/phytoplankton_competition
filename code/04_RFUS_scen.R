@@ -39,8 +39,10 @@ Scen_21C_growth <- Scen_21C %>%
   group_by(well) %>% 
   do(tidy(lm(log(rfu) ~ day, data = .))) 
 
+##filter out (intercept)
 Scen_21C_growth2 <- Scen_21C_growth %>% 
-  left_join(plate_layout)
+  left_join(plate_layout) %>%
+  filter(term == "day")
 
 concentration_order <- c("0.5", "1", "2", "4", "6", "8", "10", "20", "35", "50")
 
