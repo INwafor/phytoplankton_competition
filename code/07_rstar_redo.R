@@ -27,7 +27,9 @@ names(RFU_files2) <- RFU_files2 %>%
 
 all_plates <- map_df(RFU_files2, read_excel, range = "A15:M23", .id = "file_name")%>%
   rename(row = ...1) %>% 
-  mutate(file_name = str_replace(file_name, " ", "")) %>%
+  mutate(file_name = str_replace(file_name, " ", ""))
+
+%>%
   separate(file_name, into = c("data", "location", "loc_2", "file_name", "temp", "read"), remove = FALSE)%>%
   select(-data,
          -location,
