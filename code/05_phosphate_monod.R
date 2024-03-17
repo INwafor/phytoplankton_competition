@@ -1,6 +1,7 @@
 ## going to work on monod curves 
 source("code/03_RFUS_fist.R")
 source("code/04_RFUS_scen.R")
+source("code/07_rstar_redo.R")
 
 library(tidyverse)
 library(cowplot)
@@ -29,6 +30,37 @@ preds <- augment(nls(estimate ~ umax* (r_concentration/ (ks+ r_concentration)),
                  data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
                  control = nls.control(maxiter=500, minFactor=1/204800000)))
 
+
+### add the bewlow stuff 
+
+growth2 %>% 
+  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
+  ggplot(aes(x= nitrate_concentration, y= estimate)) + geom_point() +
+  # geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
+  geom_line(data=preds, aes(x=nitrate_concentration, y=.fitted), color = "purple", size = 1) +
+  facet_grid(treatment ~ ancestor_id) +
+  ylab("Exponential growth rate (/day)") + xlab("Nitrate concentration (uM)")
+
+
+
+growth_rates <- nitrate_exp %>%
+  filter(population != "COMBO") %>% 
+  group_by(nitrate_concentration, population, well_plate) %>%
+  do(tidy(nls(RFU ~ N0 * exp(r*days),
+              data= .,  start=list(r=0.01),
+              control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
+  ungroup() 
+
+
+growth2 <- left_join(growth_rates, treatments, by = "population") %>% 
+  mutate(treatment = ifelse(is.na(treatment), "none", treatment))
+
+
+growth2 %>% 
+  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>% 
+  ggplot(aes(x = nitrate_concentration, y = estimate)) + geom_point() +
+  facet_grid(treatment ~ ancestor_id) + geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
+  xlab("Nitrate concentration (uM)") 
 
 # growth rates with growthTools -------------------------------------------
 library(growthTools)
@@ -70,3 +102,4 @@ all_growth_n %>%
   ggplot(aes(x = nitrate_concentration, y = mu)) + geom_point() +
   facet_grid(treatment ~ ancestor_id) + geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
   xlab("Nitrate concentration (uM)") 
+
