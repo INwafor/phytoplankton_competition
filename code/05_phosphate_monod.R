@@ -13,6 +13,24 @@ install.packages("plotrix")
 library(plotrix)
 library(here)
 
+str(march15_rfus_final)
+
+## how to fix this so all the dots and lights arent stacked on top of eachother?
+march15_rfus_final %>% 
+  # filter(days < 1.4) %>% 
+  ggplot(aes(x = day, y = rfu, color = factor(r_concentration), group = read)) + geom_point() +
+  geom_line() + 
+  facet_wrap( ~ spec_temp, scales = "free_y") + 
+  scale_color_viridis_d(name = "Phosphate level")
+
+nitrate_exp <- nitrate %>% 
+  mutate(exponential = case_when(days < 2 ~ "yes",
+                                 TRUE ~ "no")) %>% 
+  filter(exponential == "yes") %>% 
+  group_by(population, nitrate_concentration, well_plate) %>% 
+  mutate(N0 = RFU[[1]]) 
+
+
 ##estimate growth rates first then fit the monod curve OR direct method (estimate parameters directly)
 #plot edtimate as function of r_concentration
 Scen_21C_growth2 %>% 
@@ -30,16 +48,16 @@ preds <- augment(nls(estimate ~ umax* (r_concentration/ (ks+ r_concentration)),
                  data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
                  control = nls.control(maxiter=500, minFactor=1/204800000)))
 
-
-### add the bewlow stuff 
-
-growth2 %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
-  ggplot(aes(x= nitrate_concentration, y= estimate)) + geom_point() +
+##stuff down here isnt working too good 
+{
+# this graph is a weirdo! how to make it better?
+Scen_21C_growth2 %>% 
+  mutate(r_concentration = as.numeric(r_concentration)) %>%
+  ggplot(aes(x= r_concentration, y= estimate)) + geom_point() +
   # geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  geom_line(data=preds, aes(x=nitrate_concentration, y=.fitted), color = "purple", size = 1) +
-  facet_grid(treatment ~ ancestor_id) +
-  ylab("Exponential growth rate (/day)") + xlab("Nitrate concentration (uM)")
+  geom_line(data=preds, aes(x= r_concentration, y=.fitted), color = "purple", size = 1) +
+  # facet_grid(treatment ~ ancestor_id) +
+  ylab("Exponential growth rate (/day)") + xlab("Phosphate concentration (uM)")
 
 
 
@@ -61,34 +79,39 @@ growth2 %>%
   ggplot(aes(x = nitrate_concentration, y = estimate)) + geom_point() +
   facet_grid(treatment ~ ancestor_id) + geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
   xlab("Nitrate concentration (uM)") 
+}
 
 # growth rates with growthTools -------------------------------------------
 library(growthTools)
 
-view(final_merge)
+#will i not get proper growth rates? 
 
+##Fist_21C only 
+str(final_merge)
 
 b2 <- final_merge %>% 
-  filter(nitrate_level == 1) %>% 
-  filter(well_plate == "B06_1") %>% 
-  mutate(ln.fluor = log(RFU)) 
+  filter(r_concentration == 0.5) %>% 
+  filter(spec_temp == "Fist_21C") %>% 
+  mutate(ln.fluor = log(rfu)) 
 
-nitrate %>%
-  filter(plate == 1) %>%
-  ggplot(aes(x = days, y = RFU, group = well_plate, color = population)) + geom_point() + geom_line()
+##one again points are just displayed on top of eachother (line connection is jagged)
+final_merge %>%
+  # filter(spec_temp == "Fist_21C") %>%
+  ggplot(aes(x = day, y = rfu, group = r_concentration, color = treatment)) + geom_point() + geom_line()
 
 
-res <- get.growth.rate(b2$days, b2$ln.fluor, plot.best.Q =T, id = "B02")
+res <- get.growth.rate(b2$day, b2$ln.fluor, plot.best.Q =T, id = "Fist_21C")
 
-growth_rates_n <- nitrate %>%
-  filter(population != "COMBO") %>% 
-  mutate(ln.fluor = log(RFU)) %>% 
-  # filter(nitrate_level > 1) %>% 
-  group_by(well_plate) %>% 
-  do(grs=get.growth.rate(x=.$days, y=.$ln.fluor,id=.$well_plate,plot.best.Q=T,fpath="/Users/joeybernhardt/Documents/Narwani/ChlamEE-R-star/figures/growth_curve_fits/nitrate/"))
+#literally what am i looking at 
+growth_rates_n <- final_merge %>%
+  filter(spec_temp != "Fist_21C") %>% 
+  mutate(ln.fluor = log(rfu)) %>% 
+  filter(r_concentration > 0.5) %>% 
+  do(grs=get.growth.rate(x=.$day, y=.$ln.fluor,id=.$spec_temp,plot.best.Q=T))
+
 
 growth_sum_n <- growth_rates_n %>%
-  summarise(well_plate,mu=grs$best.slope,
+  summarise(spec_temp,mu=grs$best.slope,
             best.model=grs$best.model,best.se=grs$best.se)
 
 all_growth_n <- left_join(growth_sum_n, treatments5, by = c("well_plate")) %>% 
