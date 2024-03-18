@@ -224,7 +224,6 @@ view(final_merge)
   view(merged_time)
   
   
-  
   merged_time$day_1 <- format(merged_time$day_1, format = "%H:%M:%S %p")
   merged_time$day_2 <- format(merged_time$day_2, format = "%H:%M:%S %p")
   merged_time$day_3 <- format(merged_time$day_3, format = "%H:%M:%S %p")

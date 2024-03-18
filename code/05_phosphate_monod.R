@@ -15,20 +15,23 @@ library(here)
 
 str(march15_rfus_final)
 
-## how to fix this so all the dots and lights arent stacked on top of eachother?
+##LOOK AT IT BY READS INSTEAD OF BY DAY- time elapsed in units of days divide number of hours by 24 = unit of days - 
+#then use that in the equation to calculate growth rates
+##time elaspsed from first read add column = fix
 march15_rfus_final %>% 
   # filter(days < 1.4) %>% 
-  ggplot(aes(x = day, y = rfu, color = factor(r_concentration), group = read)) + geom_point() +
+  ggplot(aes(x = day, y = rfu, color = factor(r_concentration), group = r_concentration)) + geom_point() +
   geom_line() + 
   facet_wrap( ~ spec_temp, scales = "free_y") + 
   scale_color_viridis_d(name = "Phosphate level")
 
-nitrate_exp <- nitrate %>% 
-  mutate(exponential = case_when(days < 2 ~ "yes",
+
+phosphate_exp <- final_merge %>% 
+  mutate(exponential = case_when(day >= 1 ~ "yes",
                                  TRUE ~ "no")) %>% 
   filter(exponential == "yes") %>% 
-  group_by(population, nitrate_concentration, well_plate) %>% 
-  mutate(N0 = RFU[[1]]) 
+  group_by(r_concentration) %>% 
+  mutate(N0 = rfu[[1]]) 
 
 
 ##estimate growth rates first then fit the monod curve OR direct method (estimate parameters directly)
@@ -40,6 +43,7 @@ Scen_21C_growth2 %>%
 mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
               data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port",
               control = nls.control(maxiter=500, minFactor=1/204800000))
+summary(mod1)
 #ks = concentration at which growth rate is at its half of the maximum (units of phosphate)
 #umax = maximum estimated growth rate 
 
@@ -47,6 +51,8 @@ mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
 preds <- augment(nls(estimate ~ umax* (r_concentration/ (ks+ r_concentration)),
                  data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
                  control = nls.control(maxiter=500, minFactor=1/204800000)))
+
+preds <- augment(mod1)
 
 ##stuff down here isnt working too good 
 {
@@ -60,11 +66,9 @@ Scen_21C_growth2 %>%
   ylab("Exponential growth rate (/day)") + xlab("Phosphate concentration (uM)")
 
 
-
-growth_rates <- nitrate_exp %>%
-  filter(population != "COMBO") %>% 
-  group_by(nitrate_concentration, population, well_plate) %>%
-  do(tidy(nls(RFU ~ N0 * exp(r*days),
+growth_rates <- phosphate_exp %>%
+  group_by(r_concentration) %>%
+  do(tidy(nls(rfu ~ N0 * exp(r*day),
               data= .,  start=list(r=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ungroup() 
