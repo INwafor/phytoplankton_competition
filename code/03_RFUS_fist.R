@@ -16,19 +16,21 @@ theme_set(theme_cowplot())
 
 #Graphing
 #Fistulifera 21C
-Fist_21C <- final_merge %>%
-  filter(grepl("Fist_21C", spec_temp))
+Fist_21C <- all_merged %>%
+  filter(grepl("Fist_21C", file_name))
 
 Fist_21C <- Fist_21C %>%
   mutate(r_concentration = factor(r_concentration))
 
+#make units coreect 
+
 Fist_21C %>% 
   filter(r_concentration != 0) %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
+  ggplot(aes(x = time_elapsed_units, y = log(RFU), group = well, color = r_concentration)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) + 
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(~r_concentration, scales = "free_y")+ scale_color_npg()+
-  ylab("log(rfu)") + xlab("day") +
+  ylab("log(rfu)") + xlab("days in units") +
   ggtitle("logged Fist_21C r*")
 #ggsave("figures/Fist_21C_logged", width = 15, height = 10)
 
