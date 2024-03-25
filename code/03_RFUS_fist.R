@@ -14,7 +14,7 @@ library(RColorBrewer)
 
 theme_set(theme_cowplot())
 
-#Graphing
+#Graphing - this is the code updated on mar 24th - repeat for all species 
 #Fistulifera 21C
 Fist_21C <- all_merged %>%
   filter(grepl("Fist_21C", file_name))
@@ -22,22 +22,28 @@ Fist_21C <- all_merged %>%
 Fist_21C <- Fist_21C %>%
   mutate(r_concentration = factor(r_concentration))
 
-#make units coreect 
+Fist_21C <- Fist_21C %>%
+  mutate(time_elapsed_units = as.numeric(as.character(time_elapsed_units))) %>%  # Convert to numeric
+  mutate(time_elapsed_units = round(time_elapsed_units, 2)) %>%  # Round to 2 decimal places
+  mutate(time_elapsed_units = as.factor(time_elapsed_units))
 
-Fist_21C %>% 
-  filter(r_concentration != 0) %>% 
-  ggplot(aes(x = time_elapsed_units, y = log(RFU), group = well, color = r_concentration)) + 
+
+Fist_21C %>%
+  filter(r_concentration != 0) %>%
+  ggplot(aes(x = time_elapsed_units, y = log(RFU), group = well, color = factor(r_concentration))) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) + 
   geom_smooth(method = "loess", se = FALSE) +
-  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_npg()+
-  ylab("log(rfu)") + xlab("days in units") +
-  ggtitle("logged Fist_21C r*")
-#ggsave("figures/Fist_21C_logged", width = 15, height = 10)
+  facet_wrap(~r_concentration, scales = "free_y") + 
+  scale_color_npg() +
+  ylab("log(rfu)") + 
+  xlab("Time elapsed (units)") +
+  ggtitle("Logged Fist_21C r*") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 Fist_21C_growth <- Fist_21C %>% 
   filter(treatment != "Blank") %>% 
   group_by(well) %>% 
-  do(tidy(lm(log(rfu) ~ day, data = .))) 
+    do(tidy(lm(log(RFU) ~ time_elapsed_units, data = .))) 
 
 Fist_21C_growth2 <- Fist_21C_growth %>% 
   left_join(plate_layout)
@@ -45,65 +51,9 @@ Fist_21C_growth2 <- Fist_21C_growth %>%
 concentration_order <- c("0.5", "1", "2", "4", "6", "8", "10", "20", "35", "50")
 
 Fist_21C_growth2 %>% 
-  filter(term == "day") %>% 
+  filter(term == "time_elapsed_units") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   ylab("growth rate (per day)") + xlab("resource level") +
   ggtitle ("growth rate - Fist 21C")
-
-##Fistulifera 30C
-Fist_30C <- final_merge %>%
-  filter(grepl("Fist_30C", spec_temp))
-
-Fist_30C %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
-  geom_point(col = "black", shape = 1, alpha = 0.6) + 
-  geom_smooth(method = "loess", se = FALSE) +
-  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis(option = "plasma") +
-  ylab("log(rfu)") + xlab("day") +
-  ggtitle("logged Fist_30C r*")
-#ggsave("figures/Fist_30C_logged", width = 15, height = 10)
-
-Fist_30C_growth <- Fist_30C %>% 
-  filter(treatment != "Blank") %>% 
-  group_by(well) %>% 
-  do(tidy(lm(log(rfu) ~ day, data = .))) 
-
-Fist_30C_growth2 <- Fist_30C_growth %>% 
-  left_join(plate_layout)
-
-Fist_30C_growth2 %>% 
-  filter(term == "day") %>% 
-  mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
-  ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("growth rate (per day)") + xlab("resource level") +
-  ggtitle ("growth rate - Fist 30C")
-
-##Fistulifera 8C
-Fist_8C <- final_merge %>%
-  filter(grepl("Fist_8C", spec_temp))
-
-Fist_8C %>% 
-  ggplot(aes(x = day, y = log(rfu), group = well, color = r_concentration)) + 
-  geom_point(col = "black", shape = 1, alpha = 0.6) + 
-  geom_smooth(method = "loess", se = FALSE) +
-  facet_wrap(~r_concentration, scales = "free_y")+ scale_color_viridis() +
-  ylab("log(rfu)") + xlab("day") +
-  ggtitle("logged Fist_8C r*")
-#ggsave("figures/Fist_8C_logged", width = 15, height = 10)
-
-Fist_8C_growth <- Fist_8C %>% 
-  filter(treatment != "Blank") %>% 
-  group_by(well) %>% 
-  do(tidy(lm(log(rfu) ~ day, data = .))) 
-
-Fist_8C_growth2 <- Fist_8C_growth %>% 
-  left_join(plate_layout)
-
-Fist_8C_growth2 %>% 
-  filter(term == "day") %>% 
-  mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
-  ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("growth rate (per day)") + xlab("resource level") +
-  ggtitle ("growth rate - Fist 8C")
 
