@@ -35,8 +35,8 @@ Fist_21C %>%
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(~r_concentration, scales = "free_y") + 
   scale_color_npg() +
-  ylab("log(rfu)") + 
-  xlab("Time elapsed (units)") +
+  ylab("log(RFU)") + 
+  xlab("Time elapsed (units of days)") +
   ggtitle("Logged Fist_21C r*") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
