@@ -2,6 +2,9 @@
 
 #two sample - sampled paired 
 #-2 one sample t-test and compare } treat set of differences as one sample 
+## test R star ate different temperatures / species - estimate amount of error
+## family of different curves fit to the same dataset - bootstrapping (mean +- se) - dot and line
+
 
 #two sample - samples independent 
 # - two sample t-test with pooled variance term? (normal distribution, normal variance)
