@@ -68,18 +68,19 @@ all_times$`day_3` <- gsub("Time: ", "", as.character(all_times$`day_3`))
 ##time elaspsed from first read add column 
 #time_elapsed_units = the dividing by 24 
 
+## this stuff didnt work 
 library(purrr)
 
 # set new date for everything
-date_0 <- as.POSIXct("2024-02-14", format = "%Y-%m-%d")
-date_1 <- as.POSIXct("2024-02-15", format = "%Y-%m-%d")
-date_2 <- as.POSIXct("2024-02-16", format = "%Y-%m-%d")
-date_3 <- as.POSIXct("2024-02-17", format = "%Y-%m-%d") 
+#date_0 <- as.POSIXct("2024-02-14", format = "%Y-%m-%d")
+#date_1 <- as.POSIXct("2024-02-15", format = "%Y-%m-%d")
+#date_2 <- as.POSIXct("2024-02-16", format = "%Y-%m-%d")
+#date_3 <- as.POSIXct("2024-02-17", format = "%Y-%m-%d") 
   
-all_times$day_0_POSIXct <- as.POSIXct(paste(date_0, all_times$day_0), format = "%Y-%m-%d %H:%M:%S")
-all_times$day_1_POSIXct <- as.POSIXct(paste(date_1, all_times$day_1), format = "%Y-%m-%d %H:%M:%S")
-all_times$day_2_POSIXct <- as.POSIXct(paste(date_2, all_times$day_2), format = "%Y-%m-%d %H:%M:%S")
-all_times$day_3_POSIXct <- as.POSIXct(paste(date_3, all_times$day_3), format = "%Y-%m-%d %H:%M:%S")
+#all_times$day_0_POSIXct <- as.POSIXct(paste(date_0, all_times$day_0), format = "%Y-%m-%d %H:%M:%S")
+#all_times$day_1_POSIXct <- as.POSIXct(paste(date_1, all_times$day_1), format = "%Y-%m-%d %H:%M:%S")
+#all_times$day_2_POSIXct <- as.POSIXct(paste(date_2, all_times$day_2), format = "%Y-%m-%d %H:%M:%S")
+#all_times$day_3_POSIXct <- as.POSIXct(paste(date_3, all_times$day_3), format = "%Y-%m-%d %H:%M:%S")
 
 times_dates <- all_times %>% 
   select(-day_0,
