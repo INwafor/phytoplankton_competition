@@ -13,7 +13,11 @@ install.packages("plotrix")
 library(plotrix)
 library(here)
 
-str(march15_rfus_final)
+##February Monod curves - ALL MERGED?
+str(all_merged)
+
+##march data 
+str(all_merged2)
 
 ##LOOK AT IT BY READS INSTEAD OF BY DAY- time elapsed in units of days divide number of hours by 24 = unit of days - 
 #then use that in the equation to calculate growth rates

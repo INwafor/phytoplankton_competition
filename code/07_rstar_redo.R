@@ -13,8 +13,7 @@ library(lubridate)
 library(broom)
 theme_set(theme_cowplot())
 
-##march 25th - redoing for mar25
-##have the plate layout which includes the well, treatment and resource level - NO NEED TO LEFT JOIN?
+##march 25th - redo
 plate_layout <- read_excel("data/plate_template.xlsx", sheet = "rstar_plates") %>%
   clean_names() %>%
   mutate(r_concentration = as.numeric(r_concentration)) %>%
@@ -150,7 +149,11 @@ all_temp_RFU <- subset(all_temp_RFU, select = -c(row, well))
 colnames(all_temp_RFU)[colnames(all_temp_RFU) == "well_key"] <- "well"
 
 ##adding in R concentration - now we can left bind with plate layout
-all_merged2 <- left_join(all_temp_RFU, plate_layout, by = "well")
+all_merged2 <- left_join(all_temp_RFU, plate_layout, by = "well") %>%
+  select(-day_0,
+         -day_1,
+         -day_2,
+         -day_3)
 
 
 ##plotting rfus for all three plates 
