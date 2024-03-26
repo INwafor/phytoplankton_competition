@@ -111,11 +111,7 @@ reads_times2 <- reads_times2 %>%
     )
   )
 
-all_times2 <- dplyr::left_join(times_dates, reads_times2, by = "read")%>%
-  select(-day_0_POSIXct,
-         -day_1_POSIXct,
-         -day_2_POSIXct,
-         -day_3_POSIXct)
+all_times2 <- dplyr::left_join(times_dates, reads_times2, by = "read")
 
 #remove the date columns and then join to all plates?
 alltimes_2 <- all_times2 %>%
@@ -141,74 +137,6 @@ alltimes_3 <- alltimes_2 %>%
 
 alltimes_3 <- unite(alltimes_3, file_name, c(file_name, temp, read))
 
-#POSITct code that didn't work - come back and try later
-{
-time_difference_1 <- difftime(times_dates$day_1_POSIXct, times_dates$day_0_POSIXct, units = "hours")
-print(time_difference_1)
-
-time_to_numeric <- function(time_string) {
-    parts <- strsplit(time_string, ":")[[1]]
-    hours <- as.numeric(parts[1])
-    minutes <- as.numeric(parts[2])
-    seconds <- as.numeric(parts[3])
-    total_seconds <- hours * 3600 + minutes * 60 + seconds
-    return(total_seconds)
-  }
-  
-  
-  # Apply the time_to_numeric function to convert time strings to numeric (total seconds)
-  times_dates$day_0_numeric <- sapply(times_dates$day_0_POSIXct, time_to_numeric)
-  all_times$day_1_numeric <- sapply(all_times$day_1, time_to_numeric)
-  all_times$day_2_numeric <- sapply(all_times$day_2, time_to_numeric)
-  all_times$day_3_numeric <- sapply(all_times$day_3, time_to_numeric)
-  
-  # Calculate elapsed time in hours
-  all_times$elapsed_day_0 <- c(0, diff(all_times$day_0_numeric) / 3600)
-  
-  merged_time$day_1_numeric <- sapply(merged_time$day_1_formatted, time_to_numeric)
-  
-  view(merged_time)
-  
-  
-  merged_time$day_1 <- format(merged_time$day_1, format = "%H:%M:%S %p")
-  merged_time$day_2 <- format(merged_time$day_2, format = "%H:%M:%S %p")
-  merged_time$day_3 <- format(merged_time$day_3, format = "%H:%M:%S %p")
-  merged_time$day_4 <- format(merged_time$day_4, format = "%H:%M:%S %p")
-  
-  view(merged_time)
-  
-  str(merged_time)
-  print(merged_time[, c("day_1", "day_2", "day_3", "day_4")])
-  
-  ##make time increasing - this didnt work 
-  merged_hours <- merged_time %>%
-    mutate(
-      time_sequence = pmap_dbl(select(., starts_with("day")), ~ as.numeric(difftime(..1, ..[1], units = "hours")))
-    )
-  
-  ## only changed day 1, added todays date 
-  for (i in 2:5) {
-    all_merged[[i]] <- as.POSIXct(all_merged[[i]], format = "%H:%M:%S %p")
-    
-    print(sapply(all_merged[2:5], class))
-  } 
-  view(all_merged)
-  
-  # View the resulting data frame
-  print(data)
-  
-  all_times_merged <- all_merged %>%
-    mutate(`Day 1` = as.numeric(`Day 1`))
-  
-  str(all_times_merged)
-  
-  
-  unite(col = date_time, Date, time, sep = " ") %>%
-    mutate(date_time = ymd_hms(date_time)) %>% 
-    
-    mutate(start_time = min(date_time)) %>% 
-    mutate(days = interval(start_time, date_time)/ddays(1))
-}
 
 all_plates2 <- dplyr::left_join(all_plates, alltimes_3, by = "file_name")
 
