@@ -47,12 +47,12 @@ Scen_21C_growth <- Scen_21C %>%
   do(tidy(lm(log(RFU) ~ day, data = .))) 
 
 Scen_21C_growth2 <- Scen_21C_growth %>% 
-  left_join(plate_layout)
+  left_join(plate_layout) %>% 
+  filter(term == "day")
 
 concentration_order <- c("0.5", "1", "2", "4", "6", "8", "10", "20", "35", "50")
 
 Scen_21C_growth2 %>% 
-  filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   ylab("Growth rate (per day)") + xlab("Resource level")  
@@ -88,10 +88,10 @@ Scen_8C_growth <- Scen_8C %>%
   do(tidy(lm(log(RFU) ~ day, data = .))) 
 
 Scen_8C_growth2 <- Scen_8C_growth %>% 
-  left_join(plate_layout)
+  left_join(plate_layout) %>% 
+  filter(term == "day")
 
 Scen_8C_growth2 %>% 
-  filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   ylab("Growth rate (per day)") + xlab("Resource level")  
@@ -127,10 +127,10 @@ Scen_30C_growth <- Scen_30C %>%
   do(tidy(lm(log(RFU) ~ day, data = .))) 
 
 Scen_30C_growth2 <- Scen_30C_growth %>% 
-  left_join(plate_layout)
+  left_join(plate_layout) %>% 
+  filter(term == "day")
 
 Scen_30C_growth2 %>% 
-  filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   ylab("Growth rate (per day)") + xlab("Resource level")  
