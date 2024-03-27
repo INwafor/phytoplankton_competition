@@ -1,7 +1,6 @@
 ## going to work on monod curves 
 source("code/03_RFUS_fist.R")
 source("code/04_RFUS_scen.R")
-source("code/07_rstar_redo.R")
 
 library(tidyverse)
 library(cowplot)
@@ -16,33 +15,31 @@ library(here)
 ##February Monod curves - ALL MERGED?
 str(all_merged)
 
-##march data 
-str(all_merged2)
-
-##LOOK AT IT BY READS INSTEAD OF BY DAY- time elapsed in units of days divide number of hours by 24 = unit of days - 
-#then use that in the equation to calculate growth rates
-##time elaspsed from first read add column = fix
-march15_rfus_final %>% 
+##sTOOPPPID
+all_merged %>% 
   # filter(days < 1.4) %>% 
-  ggplot(aes(x = day, y = rfu, color = factor(r_concentration), group = r_concentration)) + geom_point() +
+  ggplot(aes(x = time_elapsed_units, y = RFU, color = factor(r_concentration), group = file_name)) + geom_point() +
   geom_line() + 
-  facet_wrap( ~ spec_temp, scales = "free_y") + 
+  facet_wrap( ~ file_name, scales = "free_y") + 
   scale_color_viridis_d(name = "Phosphate level")
 
 
-phosphate_exp <- final_merge %>% 
+phosphate_exp <- all_merged %>% 
   mutate(exponential = case_when(day >= 1 ~ "yes",
                                  TRUE ~ "no")) %>% 
   filter(exponential == "yes") %>% 
   group_by(r_concentration) %>% 
-  mutate(N0 = rfu[[1]]) 
-
+  mutate(N0 = RFU[[1]]) 
+## what is NO rfu
 
 ##estimate growth rates first then fit the monod curve OR direct method (estimate parameters directly)
 #plot edtimate as function of r_concentration
-Scen_21C_growth2 %>% 
+##FEBRUARY DATA 
+#Fist 21C
+Fist_21C_growth2 %>% 
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6)
+## estimate didnt remove the intercept fix that
 
 mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
               data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port",
@@ -60,7 +57,7 @@ preds <- augment(mod1)
 
 ##stuff down here isnt working too good 
 {
-# this graph is a weirdo! how to make it better?
+
 Scen_21C_growth2 %>% 
   mutate(r_concentration = as.numeric(r_concentration)) %>%
   ggplot(aes(x= r_concentration, y= estimate)) + geom_point() +

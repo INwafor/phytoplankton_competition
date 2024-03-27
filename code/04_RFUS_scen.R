@@ -38,8 +38,8 @@ Scen_21C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/Scen_21C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #ggsave("figures/Scen_21C_logged.png", width = 15, height = 10)
 
 Scen_21C_growth <- Scen_21C %>% 
   filter(treatment != "Blank") %>% 
@@ -55,8 +55,8 @@ Scen_21C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/Scen_21C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level")  
+  #ggsave("figures/Scen_21C_growthrate.png", width = 15, height = 10)
 
 ##scenedemsus 8C
 Scen_8C <- all_merged %>%
@@ -79,8 +79,8 @@ Scen_8C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/Scen_8C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #ggsave("figures/Scen_8C_logged.png", width = 15, height = 10)
 
 Scen_8C_growth <- Scen_8C %>% 
   filter(treatment != "Blank") %>% 
@@ -94,8 +94,8 @@ Scen_8C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/Scen_8C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level")  
+  #ggsave("figures/Scen_8C_growthrate.png", width = 15, height = 10)
 
 ##Scenedesmus 30C
 Scen_30C <- all_merged %>%
@@ -118,8 +118,8 @@ Scen_30C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/Scen_30C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #ggsave("figures/Scen_30C_logged.png", width = 15, height = 10)
 
 Scen_30C_growth <- Scen_30C %>% 
   filter(treatment != "Blank") %>% 
@@ -133,5 +133,5 @@ Scen_30C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/Scen_30C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level")  
+  #ggsave("figures/Scen_30C_growthrate.png", width = 15, height = 10)

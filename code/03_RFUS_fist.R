@@ -53,8 +53,8 @@ Fist_21C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/fist_21C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level") 
+  #ggsave("figures/fist_21C_growthrate.png", width = 15, height = 10)
 
 ##Fistulifera 8C
 Fist_8C <- all_merged %>%
@@ -77,8 +77,8 @@ Fist_8C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/fist_8C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #ggsave("figures/fist_8C_logged.png", width = 15, height = 10)
 
 Fist_8C_growth <- Fist_8C %>% 
   filter(treatment != "Blank") %>% 
@@ -92,8 +92,8 @@ Fist_8C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/fist_8C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level") 
+  #ggsave("figures/fist_8C_growthrate.png", width = 15, height = 10)
 
 ##Fistulifera 30C
 Fist_30C <- all_merged %>%
@@ -116,8 +116,8 @@ Fist_30C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/fist_30C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+  #ggsave("figures/fist_30C_logged.png", width = 15, height = 10)
 
 Fist_30C_growth <- Fist_30C %>% 
   filter(treatment != "Blank") %>% 
@@ -131,6 +131,6 @@ Fist_30C_growth2 %>%
   filter(term == "day") %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  ylab("Growth rate (per day)") + xlab("Resource level") + 
-  ggsave("figures/fist_30C_growthrate.png", width = 15, height = 10)
+  ylab("Growth rate (per day)") + xlab("Resource level") 
+  #ggsave("figures/fist_30C_growthrate.png", width = 15, height = 10)
 
