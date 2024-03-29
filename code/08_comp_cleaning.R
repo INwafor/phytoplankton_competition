@@ -9,20 +9,25 @@ library(cowplot)
 library(janitor)
 library(lubridate)
 
-comp <- read_excel("data/comp_phycoprobe.xlsx") %>% 
+##this is the averages already cleaned up 
+comp <- read_excel("data/comp_phycoprobe.xlsx", sheet = "clean_avg") %>% 
   clean_names() %>%
-  rename("green_algae_ug" = green_algae_4,
-         "green_algae_ml" = green_algae_5,
-         "diatom_ug" = diatoms_6,
-         "diatom_ml" = diatoms_7,
-         "tot_conc_ug" = total_conc,
-         "tot_density_ml" = total_cell_count)
+  rename("green_algae_ug" = green_algae_avg_3,
+         "green_algae_ml" = green_algae_avg_4,
+         "diatom_ug" = diatoms_avg_5,
+         "diatom_ml" = diatoms_avg_6,
+         "tot_conc_ug" = avg_total_conc,
+         "tot_density_ml" = avg_tot_cell_count)
 
 comp <- comp[!(row.names(comp) %in% c("1")),]
 
-comp <- mutate_at(comp, vars(replicate, read, green_algae_ug, green_algae_ml, diatom_ug, diatom_ml, tot_conc_ug, tot_density_ml), as.numeric)
+comp <- mutate_at(comp, vars(replicate, green_algae_ug, green_algae_ml, diatom_ug, diatom_ml, tot_conc_ug, tot_density_ml), as.numeric)
+
+##now lets plot using a box plot!
 
 
+
+{
 ##how to make this work for all the reps
 ##average each replicate reads - so then we have 1 "read" per then for all the cold / hot
 #make separate tibbles for each 
@@ -52,3 +57,4 @@ averages <- comp %>%
     avg_tot_conc_ug = mean(tot_conc_ug[1:3], na.rm = TRUE),
     avg_tot_density_ml = mean(tot_density_ml[1:3], na.rm = TRUE)
   )
+}
