@@ -23,38 +23,26 @@ comp <- comp[!(row.names(comp) %in% c("1")),]
 
 comp <- mutate_at(comp, vars(replicate, green_algae_ug, green_algae_ml, diatom_ug, diatom_ml, tot_conc_ug, tot_density_ml), as.numeric)
 
-##now lets plot using a box plot!
+##now lets plot using a box plot
+##plot byt tempertaures to look at all the replciates and then will average those and put them togther to look at everything at once
 
 
+# Reshape data for plotting
+df_c_long <- reshape2::melt(comp, id.vars = c('temp', 'replicate'))
+df_ug <- subset(df_c_long, variable %in% c("green_algae_ug", "diatom_ug", "tot_conc_ug"))
 
-{
-##how to make this work for all the reps
-##average each replicate reads - so then we have 1 "read" per then for all the cold / hot
-#make separate tibbles for each 
-#COLD
-C1 <- subset(comp, temp == 'C' & replicate == 1)
+# Create box plot for green_algae_ug, diatom_ug, and tot_conc_ug
+ggplot(df_ug, aes(x = variable, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ temp, scales = 'free_y') +
+  labs(x = '', y = 'Algae Concentration (ug)')
 
+# Subset the data for green_algae_ml, diatom_ml, and tot_conc_ml
+df_ml <- subset(df_c_long, variable %in% c("green_algae_ml", "diatom_ml", "tot_density_ml"))
 
+# Create box plot for green_algae_ml, diatom_ml, and tot_conc_ml
+ggplot(df_ml, aes(x = variable, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ temp, scales = 'free_y') +
+  labs(x = '', y = 'Algae Concentration (mL)') 
 
-#this finds the average for reach read - repeat for all ?  
-C1_avg <- mean(C1$green_algae_ug[1:3], na.rm = TRUE)
-
-
-C1_avg_g <- mean(C1$green_algae_ml[1:3], na.rm = TRUE)
-
-#- then how do i add them - make a tibble with temp, replciate, and average for green/diatom etc 
-
-
-#from chat
-# group by temperature and replicate, then calculate the mean for each combination
-averages <- comp %>%
-  group_by(temp, replicate) %>%
-  summarise(
-    avg_green_algae_ug = mean(green_algae_ug[1:3], na.rm = TRUE),
-    avg_green_algae_ml = mean(green_algae_ml[1:3], na.rm = TRUE),
-    avg_diatom_ug = mean(diatom_ug[1:3], na.rm = TRUE),
-    avg_diatom_ml = mean(diatom_ml[1:3], na.rm = TRUE),
-    avg_tot_conc_ug = mean(tot_conc_ug[1:3], na.rm = TRUE),
-    avg_tot_density_ml = mean(tot_density_ml[1:3], na.rm = TRUE)
-  )
-}
