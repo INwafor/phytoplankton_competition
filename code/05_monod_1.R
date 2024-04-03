@@ -1,6 +1,7 @@
 ## going to work on monod curves 
 source("code/03_RFUS_fist.R")
 source("code/04_RFUS_scen.R")
+source("code/07_rstar_redo.R")
 
 library(tidyverse)
 library(cowplot)
@@ -12,16 +13,29 @@ install.packages("plotrix")
 library(plotrix)
 library(here)
 theme_set(theme_cowplot())
-##February Monod curves - ALL MERGED?
-str(all_merged)
 
-all_merged <- all_merged %>% separate(file_name, into = c("file_name", "temp", "read"), remove = FALSE) %>%
+##this has stopped working ?? need to fix this first bc will affect everything after for those temps
+str(all_merged)
+str(all_merged2)
+
+all_merged <- all_merged %>% separate(file_name, into = c("file_name", "temp", "read"), remove = FALSE) %>%  unite(file_name, c(file_name, temp))
+
+all_merged2 <- all_merged2 %>% separate(file_name, into = c("file_name", "temp", "read"), remove = FALSE) %>%
   unite(file_name, c(file_name, temp))
 
 all_merged <- all_merged %>%
   mutate(time_elapsed_units = round(time_elapsed_units, 2))
+all_merged2 <- all_merged2 %>%
+  mutate(time_elapsed_units = round(time_elapsed_units, 2))
 
 custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
+
+ ## filter out Fist_21C Fist_30C and Scen_8 under file_name in all_merged and then add it back in from the all_merged2 dataframe 
+filtered_all_merged <- all_merged %>%
+  filter(file_name != "Fist_21C" & file_name != "Fist_30C" & file_name != "Scen_8C")
+
+library(dplyr)
+rfu_df <- dplyr::left_join(filtered_all_merged, all_merged2, by = "time_elapsed units")
 
 all_merged %>% 
   filter(day > 0) %>% 
@@ -192,7 +206,7 @@ growth_rates %>%
         panel.grid.minor = element_blank())
 
 
-# maybe dont neeed{
+# maybe dont need {
 prediction_function <- function(df) {
   
   
@@ -245,18 +259,9 @@ ggsave("figures/nitrate_monod.pdf", width = 15, height = 10)
 
 library(plotrix)
 
-m2 <- left_join(monod_fits, treatments, by = "population")
-
-m2 %>% 
-  group_by(treatment, term) %>% 
-  summarise_each(funs(mean, std.error), estimate) %>%
-  ggplot(aes(x = treatment, y = mean)) + geom_point() + 
-  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error), width = 0.2) +
-  facet_wrap( ~ term, scales = "free")
-ggsave("figures/nitrate_monod_params.pdf", width = 8, height = 6)
-
 }
-# growth rates with growthTools -------------------------------------------
+
+# growth rates with growthTools - complete -------------------------------------------
 library(growthTools)
 
 ##Fist_21C start  
@@ -292,40 +297,29 @@ growth_rates_p <- all_merged %>%
 growth_sum_p <- growth_rates_p %>%
   summarise(file_name,mu=grs$best.slope,
             best.model=grs$best.model,best.se=grs$best.se)
-    
-growth_sum_p <- growth_rates_p %>%
-  group_by(file_name, r_concentration) %>%
-  summarise(
-    mu = mean(grs$best.slope),
-    best.model = first(na.omit(grs$best.model)),
-    best.se = mean(grs$best.se, na.rm = TRUE)
-  )
 
-growth_sum_p <- growth_rates_p %>%
-  group_by(file_name, r_concentration) %>%
-  summarise(
-    mu = mean(grs$best.slope),
-    best.model = ifelse(all(is.na(grs$best.model)), NA, first(na.omit(grs$best.model))),
-    best.se = mean(grs$best.se, na.rm = TRUE)
-  )
-
-##growth sum doesnt have r _concentration where is it supposed to add it 
-all_growth_p <- growth_sum_p %>% 
+growth_sum_p2 <- bind_cols(growth_sum_p, growth_rates_p) %>%
+  clean_names()%>%
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
+  select(-grs,
+         -file_name_5) %>%
+  rename("file_name" = file_name_1)
+
+#gives one growth rate estimate per each temperature + file_name
+growth_sum_p2 %>% 
   ggplot(aes(x = r_concentration, y = mu)) + geom_point() +
-  facet_wrap(~file_name) +
+  facet_wrap(file_name ~ r_concentration) +
   geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
   xlab("Phosphate concentration (uM)") 
 
 
 # Monod fits with the growthTools estimates -------------------------------
 
-monod_fits <- all_growth_n %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>% 
+monod_fits2 <- growth_sum_p2%>% 
   rename(estimate = mu) %>% 
-  group_by(population) %>% 
-  do(tidy(nls(estimate ~ umax* (nitrate_concentration / (ks+ nitrate_concentration)),
-              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
+  group_by(file_name) %>% 
+  do(tidy(nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
+              data= .,  start=list(ks = -1:1, umax = -1:1), algorithm="port", lower=list(c=0.01, d=0),
               control = nls.control(maxiter=500, minFactor=1/204800000))))
 
 preds <- all_growth_n %>%

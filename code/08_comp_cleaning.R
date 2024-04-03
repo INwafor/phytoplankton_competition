@@ -96,13 +96,12 @@ ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
 #+ ggsave(filename = file.path("figures","comp_ug.png"), width = 15, height = 10)
 
 
-
 ##THEN PERFORM ANOVA OR T TEST STATS
-#two sample - samples independent 
-# - two sample t-test with pooled variance term? (normal distribution, normal variance)
-# - welch two sample t-test, no pooled variances (normal distribution, unequal variances)
-# - mann-whitney or wilcoxon signed rank test (very non normally distributed, but similar distribution shapes/variances)
 
+library(stats)
+##linear regression almost works - same problem aviva had
+lm_result <- lm(green_algae_ug ~ temp + replicate, data = comp)
+print(summary(lm_result))
 
-
-## - one variable (categorical): some type of ANOVA if there is equal or unequal variance, Kruskal wallis for non normal distribution and similar variance
+kruskal_test_result <- kruskal.test(green_algae_ug ~ temp, data = comp)
+print(kruskal_test_result)
