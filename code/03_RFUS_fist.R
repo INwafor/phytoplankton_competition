@@ -36,8 +36,8 @@ Fist_21C %>%
   scale_color_npg() +
   ylab("Log(RFU)") + 
   xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  ggsave("figures/fist_21C_logged.png", width = 15, height = 10)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+#ggsave("figures/fist_21C_logged.png", width = 15, height = 10)
 
 Fist_21C_growth <- Fist_21C %>% 
   filter(treatment != "Blank") %>% 
@@ -135,17 +135,3 @@ Fist_30C_growth2 %>%
   #ggsave("figures/fist_30C_growthrate.png", width = 15, height = 10)
 
 
-##April 1st fixing graphs 
-combined_data <- rbind(Fist_21C, Fist_8C, Fist_30C)
-
-## this isnt working well
-combined_data %>%
-  filter(r_concentration != 0) %>%
-  ggplot(aes(x = time_elapsed_units, y = log(RFU), group = well, color = factor(r_concentration))) + 
-  geom_point(col = "black", shape = 1, alpha = 0.6) + 
-  geom_smooth(method = "loess", se = FALSE) +
-  facet_grid(file_name ~ r_concentration, scales = "free_y") + 
-  scale_color_npg() +
-  ylab("Log(RFU)") + 
-  xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))

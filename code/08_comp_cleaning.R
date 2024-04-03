@@ -72,8 +72,8 @@ ggplot(df_ug, aes(x = variable, y = value, fill = variable)) +
   facet_wrap(~ temp, scales = 'free_y') +
   labs(x = '', y = 'Average Algae Concentration (ug)') +
   scale_fill_manual(values=c("#71C231","#925133","#D1BF58")) +
-  guides(fill=guide_legend(title="")) +
-  ggsave(filename = file.path("figures","comp_ug.png"))
+  guides(fill=guide_legend(title="")) 
+#+ ggsave(filename = file.path("figures","comp_ug.png"), width = 15, height = 10)
   
 
 comp_ml_filtered <- comp_ml %>%
@@ -92,9 +92,17 @@ ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
   facet_wrap(~ temp, scales = 'free_y') +
   labs(x = '', y = 'Average Algae Density (mL)') + 
   scale_fill_manual(values=c("#71C231","#925133","#D1BF58")) +
-  guides(fill=guide_legend(title="")) +
-  ggsave(filename = file.path("figures","comp_ml.png"))
+  guides(fill=guide_legend(title="")) 
+#+ ggsave(filename = file.path("figures","comp_ug.png"), width = 15, height = 10)
 
 
 
 ##THEN PERFORM ANOVA OR T TEST STATS
+#two sample - samples independent 
+# - two sample t-test with pooled variance term? (normal distribution, normal variance)
+# - welch two sample t-test, no pooled variances (normal distribution, unequal variances)
+# - mann-whitney or wilcoxon signed rank test (very non normally distributed, but similar distribution shapes/variances)
+
+
+
+## - one variable (categorical): some type of ANOVA if there is equal or unequal variance, Kruskal wallis for non normal distribution and similar variance
