@@ -11,7 +11,7 @@ install.packages("here")
 install.packages("plotrix")
 library(plotrix)
 library(here)
-
+theme_set(theme_cowplot())
 ##February Monod curves - ALL MERGED?
 str(all_merged)
 
@@ -23,26 +23,25 @@ all_merged <- all_merged %>%
 
 custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 
-##logged rfu but cant view 
 all_merged %>% 
   filter(day > 0) %>% 
-  ggplot(aes(x = time_elapsed_units, y = RFU, color = factor(r_concentration), group = file_name)) + 
-  geom_point(col = "black", shape = 1, alpha = 0.6) + 
+  ggplot(aes(x = time_elapsed_units, y = log(RFU), color = factor(r_concentration), group = file_name)) + 
+  geom_point() + 
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(file_name ~ r_concentration, scales = "free_y") + 
   scale_color_viridis_d(name = "Phosphate level") +
-  geom_smooth(method = "loess", se = FALSE) + 
-  ylab("RFU") + 
+  ylab("logged RFU") + 
   xlab("Time elapsed (units of days)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 phosphate_exp <- all_merged %>% 
+  select(-read) %>%
   mutate(exponential = case_when(day >= 1 ~ "yes",
                                  TRUE ~ "no")) %>% 
   filter(exponential == "yes") %>% 
-  group_by(r_concentration) 
-#%>% mutate(N0 = RFU[[1]]) 
+  group_by(r_concentration) %>% 
+  mutate(N0 = RFU[[1]]) 
 ## what is NO rfu
 
 ##estimate growth rates first then fit the monod curve OR direct method (estimate parameters directly)
@@ -50,9 +49,26 @@ phosphate_exp <- all_merged %>%
 ##how to lay out all the concentration levels on the plot?
 
 ##FEBRUARY DATA 
-#Fist 21C
+#all merged
 concentration_order <- c("0.5", "1", "2", "4", "6", "8", "10", "20", "35", "50")
 
+all_merged_growth <- all_merged %>% 
+  filter(treatment != "Blank") %>% 
+  group_by(well, file_name) %>% 
+  do(tidy(lm(log(RFU) ~ day, data = .))) 
+
+## now add it to something that adds file name
+all_merged_growth2 <- all_merged_growth %>% 
+  left_join(plate_layout) %>%
+  filter(term == "day")
+
+all_merged_growth2 %>% 
+  mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
+  ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
+  facet_wrap(~ file_name) +
+  ylab("Growth rate (per day)") + xlab("Resource level") 
+
+## individual growth plots{
 Fist_21C_growth2 %>% 
   ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) +
@@ -82,81 +98,101 @@ Scen_8C_growth2 %>%
   ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) +
   xlab("Phosphate concentration (uM)")
+}
+fit_model <- function(all_merged_growth2) {
+  nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
+      data = all_merged_growth2,
+      start = list(ks = 1, umax = 1),
+      algorithm = "port",
+      control = nls.control(maxiter = 500, minFactor = 1/204800000))
+}
 
+# Fit separate models for each group
+models <- all_merged_growth2 %>%
+  group_by(file_name) %>%
+  do(model = fit_model(.))
 
-mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
-              data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port",
+coefficients <- models %>%
+  summarise(file_name = first(file_name),
+            ks = coef(model)["ks"],
+            umax = coef(model)["umax"])
+summary(coefficients)
+
+## mod code from joey{
+  mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
+              data= all_merged_growth2,  start=list(ks = 1, umax = 1), algorithm="port",
               control = nls.control(maxiter=500, minFactor=1/204800000))
 summary(mod1)
+
+mod2 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
+            data= Scen_30C_growth2,  start=list(ks = 1, umax = 1), algorithm="port",
+            control = nls.control(maxiter=500, minFactor=1/204800000))
+summary(mod2)
+}
+
 #ks = concentration at which growth rate is at its half of the maximum (units of phosphate)
 #umax = maximum estimated growth rate 
 
 ##then preds_model-- plot the predictions
-preds <- augment(nls(estimate ~ umax* (r_concentration/ (ks+ r_concentration)),
-                 data= Scen_21C_growth2,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
-                 control = nls.control(maxiter=500, minFactor=1/204800000)))
 
-preds <- augment(mod1)
+preds <- all_merged_growth2 %>%
+  group_by(file_name) %>%
+  do({
+    fit <- nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
+               data = .,
+               start = list(ks = 0.5, umax = 0.5),  # Provide reasonable initial guesses
+               algorithm = "port",
+               control = nls.control(maxiter = 500, minFactor = 1/204800000))
+    augment(fit) %>% mutate(file_name = unique(.$file_name))
+  })
 
-## the preds model puts it too high up - the geom line - how can we fix
-##concentration values are smudged on one side ?? 
-Fist_21C_growth2 %>% 
-  mutate(r_concentration = as.numeric(r_concentration)) %>%
-  ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + geom_point() +
+
+# the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
+all_merged_growth2 %>%
+  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
+  ggplot(aes(x = r_concentration, y = estimate)) + 
+  geom_point() +
+  facet_wrap(~ file_name) +
   #geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  geom_line(data=preds, aes(x= r_concentration, y=.fitted), color = "purple", size = 1) +
-  # facet_grid(treatment ~ ancestor_id) +
-  ylab("Exponential growth rate (/day)") + xlab("Phosphate concentration (uM)")
+  geom_line(data = preds, aes(x = r_concentration, y = .fitted), color = "red", size = 1) +
+  ylab("Exponential growth rate (/day)") + 
+  xlab("Phosphate concentration (uM)") +
+  scale_x_discrete(limits = concentration_order)
 
 
 growth_rates <- phosphate_exp %>%
-  group_by(r_concentration) %>%
+  group_by(file_name, r_concentration) %>%
   do(tidy(nls(RFU ~ N0 * exp(r*day),
               data= .,  start=list(r=0.01),
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ungroup() 
 
-#growth2 <- left_join(growth_rates, treatments, by = "population") %>% 
- # mutate(treatment = ifelse(is.na(treatment), "none", treatment))
 
-#the concentrations with growth rates over 0 
-## remove the outlier and make concentration show for each point
+## make the line red and fix background to be nicer colour, put more units on the y-axis 
 growth_rates %>% 
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
-  #facet_grid(treatment ~ ancestor_id) + 
+  geom_smooth(method = "loess", se = FALSE) + 
+  facet_wrap(~ file_name) + 
   geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
   xlab("Phosphate concentration (uM)") 
 
-# april 3rd left off {
-write_csv(growth2, "data-processed/nitrate-r-star-growth-rates.csv")
-growth2 <- read_csv("data-processed/nitrate-r-star-growth-rates.csv")
 
-monod_fits <- growth2 %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>% 
-  group_by(population) %>% 
-  do(tidy(nls(estimate ~ umax* (nitrate_concentration / (ks+ nitrate_concentration)),
-              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
-              control = nls.control(maxiter=500, minFactor=1/204800000))))
-
-
-preds <- growth2 %>%
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
-  group_by(treatment, ancestor_id) %>% 
-  do(augment(nls(estimate ~ umax* (nitrate_concentration/ (ks+ nitrate_concentration)),
-                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
-                 control = nls.control(maxiter=500, minFactor=1/204800000))))
+growth_rates %>%
+  mutate(r_concentration = as.numeric(r_concentration)) %>%
+  ggplot(aes(x = r_concentration, y = estimate)) +
+  geom_point(col = "black", size = 2.5) + 
+  geom_smooth(method = "loess", se = FALSE, color = "red", size = 1.5) +  # Change line color to red
+  facet_wrap(~ file_name) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # Add horizontal line at y = 0
+  ylab("Exponential growth rate (/day)") +
+  xlab("Phosphate concentration (uM)") + 
+  theme_cowplot() +
+  theme(panel.grid.major = element_line(color = "darkgrey", linetype = "solid"),
+        panel.grid.minor = element_blank())
 
 
-growth2 %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
-  ggplot(aes(x= nitrate_concentration, y= estimate)) + geom_point() +
-  # geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  geom_line(data=preds, aes(x=nitrate_concentration, y=.fitted), color = "purple", size = 1) +
-  facet_grid(treatment ~ ancestor_id) +
-  ylab("Exponential growth rate (/day)") + xlab("Nitrate concentration (uM)")
-
-
+# maybe dont neeed{
 prediction_function <- function(df) {
   
   
@@ -164,28 +200,35 @@ prediction_function <- function(df) {
     growth_rate<- (df$umax[[1]] * (x / (df$ks[[1]] +x)))
     growth_rate}
   
-  pred <- function(x) {
+  pred3 <- function(x) {
     y <- monodcurve(x)
   }
   
   x <- seq(0, 1000, by = 1)
   
-  preds <- sapply(x, pred)
-  preds <- data.frame(x, preds) %>% 
-    rename(nitrate_concentration.x = x, 
+  preds3 <- sapply(x, pred3)
+  preds3 <- data.frame(x, preds3) 
+  
+  %>% 
+    rename(r_concentration = x, 
            growth_rate = preds)
+  
 }
 
-
 bs_split <- monod_fits %>% 
-  select(population, term, estimate) %>% 
+  select(file_name, term, estimate) %>% 
   dplyr::ungroup() %>% 
-  spread(key = term, value = estimate) %>%
-  split(.$population)
+  spread(key = term, value = estimate)
+
+# Split the dataframe
+bs_split <- split(bs_split, bs_split$file_name)
+
+# Map the function to each split dataframe
+all_preds_p <- map_df(bs_split, prediction_function, .id = "file_name")
 
 
 all_preds_n <- bs_split %>% 
-  map_df(prediction_function, .id = "population")
+  map_df(prediction_function, .id = "file_name")
 
 
 all_predsn_2 <- left_join(all_preds_n, treatments, by = c("population"))
@@ -211,8 +254,8 @@ m2 %>%
   geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error), width = 0.2) +
   facet_wrap( ~ term, scales = "free")
 ggsave("figures/nitrate_monod_params.pdf", width = 8, height = 6)
-}
 
+}
 # growth rates with growthTools -------------------------------------------
 library(growthTools)
 
@@ -220,125 +263,59 @@ library(growthTools)
 str(all_merged)
 
 b2 <- all_merged %>% 
+  select(-read) %>%
   filter(r_concentration == 0.5) %>% 
-  filter(file_name == "Fist_21C") %>% 
   mutate(ln.fluor = log(RFU)) 
 
-##one again points are just displayed on top of eachother
-## look at all merged at top - face wrap by file name  / resource concentration? 
+### just for 0.5
 all_merged %>%
   # filter(spec_temp == "Fist_21C") %>%
-  ggplot(aes(x = time_elapsed_units, y = RFU, group = r_concentration, color = treatment)) + geom_point() + geom_line()
+  ggplot(aes(x = time_elapsed_units, y = RFU, group = r_concentration, color = treatment)) + 
+  geom_point() + geom_line() +
+  facet_wrap(file_name)
 
+split_data <- split(b2, b2$file_name)
 
-res <- get.growth.rate(b2$day, b2$ln.fluor, plot.best.Q =T, id = "Fist_21C")
+res <- lapply(split_data, function(all_merged) {
+  get.growth.rate(all_merged$day, all_merged$ln.fluor, plot.best.Q = TRUE, id = unique(all_merged$file_name))
+})
+## makes a separate plot per file name 
+
 
 #this makes only one colmumn how to fix so it still is joined ot everyhting 
 growth_rates_p <- all_merged %>%
-  filter(file_name != "Fist_21C") %>% 
   mutate(ln.fluor = log(RFU)) %>% 
-  filter(r_concentration > 0.5) %>% 
+  group_by(file_name, r_concentration) %>%
+  filter(r_concentration >= 0.5) %>% 
   do(grs=get.growth.rate(x=.$time_elapsed_units, y=.$ln.fluor,id=.$file_name,plot.best.Q=T))
-
 
 growth_sum_p <- growth_rates_p %>%
   summarise(file_name,mu=grs$best.slope,
             best.model=grs$best.model,best.se=grs$best.se)
+    
+growth_sum_p <- growth_rates_p %>%
+  group_by(file_name, r_concentration) %>%
+  summarise(
+    mu = mean(grs$best.slope),
+    best.model = first(na.omit(grs$best.model)),
+    best.se = mean(grs$best.se, na.rm = TRUE)
+  )
 
+growth_sum_p <- growth_rates_p %>%
+  group_by(file_name, r_concentration) %>%
+  summarise(
+    mu = mean(grs$best.slope),
+    best.model = ifelse(all(is.na(grs$best.model)), NA, first(na.omit(grs$best.model))),
+    best.se = mean(grs$best.se, na.rm = TRUE)
+  )
 
+##growth sum doesnt have r _concentration where is it supposed to add it 
 all_growth_p <- growth_sum_p %>% 
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
   ggplot(aes(x = r_concentration, y = mu)) + geom_point() +
-  #facet_grid(treatment ~ ancestor_id) + 
+  facet_wrap(~file_name) +
   geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
   xlab("Phosphate concentration (uM)") 
-
-
-## second half 
-{
-write_csv(growth2, "data-processed/nitrate-r-star-growth-rates.csv")
-growth2 <- read_csv("data-processed/nitrate-r-star-growth-rates.csv")
-
-monod_fits <- growth2 %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>% 
-  group_by(population) %>% 
-  do(tidy(nls(estimate ~ umax* (nitrate_concentration / (ks+ nitrate_concentration)),
-              data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
-              control = nls.control(maxiter=500, minFactor=1/204800000))))
-
-
-preds <- growth2 %>%
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
-  group_by(treatment, ancestor_id) %>% 
-  do(augment(nls(estimate ~ umax* (nitrate_concentration/ (ks+ nitrate_concentration)),
-                 data= .,  start=list(ks = 1, umax = 1), algorithm="port", lower=list(c=0.01, d=0),
-                 control = nls.control(maxiter=500, minFactor=1/204800000))))
-
-
-growth2 %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>%
-  ggplot(aes(x= nitrate_concentration, y= estimate)) + geom_point() +
-  # geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  geom_line(data=preds, aes(x=nitrate_concentration, y=.fitted), color = "purple", size = 1) +
-  facet_grid(treatment ~ ancestor_id) +
-  ylab("Exponential growth rate (/day)") + xlab("Nitrate concentration (uM)")
-
-
-prediction_function <- function(df) {
-  
-  
-  monodcurve<-function(x){
-    growth_rate<- (df$umax[[1]] * (x / (df$ks[[1]] +x)))
-    growth_rate}
-  
-  pred <- function(x) {
-    y <- monodcurve(x)
-  }
-  
-  x <- seq(0, 1000, by = 1)
-  
-  preds <- sapply(x, pred)
-  preds <- data.frame(x, preds) %>% 
-    rename(nitrate_concentration.x = x, 
-           growth_rate = preds)
-}
-
-
-bs_split <- monod_fits %>% 
-  select(population, term, estimate) %>% 
-  dplyr::ungroup() %>% 
-  spread(key = term, value = estimate) %>%
-  split(.$population)
-
-
-all_preds_n <- bs_split %>% 
-  map_df(prediction_function, .id = "population")
-
-
-all_predsn_2 <- left_join(all_preds_n, treatments, by = c("population"))
-growth2 %>% 
-  # all_growth_n %>% 
-  # mutate(estimate = mu) %>% 
-  mutate(nitrate_concentration = as.numeric(nitrate_concentration)) %>% 
-  ggplot(aes(x= nitrate_concentration, y= estimate)) + geom_point() +
-  # geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  geom_line(data=all_predsn_2, aes(x=nitrate_concentration.x, y=growth_rate, color = treatment), size = 1) +
-  facet_grid(treatment ~ ancestor_id) +
-  ylab("Exponential growth rate (/day)") + xlab("Nitrate concentration (uM)")
-ggsave("figures/nitrate_monod.pdf", width = 15, height = 10)
-
-library(plotrix)
-
-m2 <- left_join(monod_fits, treatments, by = "population")
-
-m2 %>% 
-  group_by(treatment, term) %>% 
-  summarise_each(funs(mean, std.error), estimate) %>%
-  ggplot(aes(x = treatment, y = mean)) + geom_point() + 
-  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error), width = 0.2) +
-  facet_wrap( ~ term, scales = "free")
-ggsave("figures/nitrate_monod_params.pdf", width = 8, height = 6)
-  }
 
 
 # Monod fits with the growthTools estimates -------------------------------
