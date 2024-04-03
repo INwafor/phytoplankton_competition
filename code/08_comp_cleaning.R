@@ -95,7 +95,6 @@ ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
   guides(fill=guide_legend(title="")) +
   ggsave(filename = file.path("figures","comp_ml.png"))
 
-##remove outliers 
 
 
 ##THEN PERFORM ANOVA OR T TEST STATS
