@@ -23,11 +23,11 @@ all_merged <- all_merged %>%
 
 custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 
-##how to export it to the large size - chnage colour scale 
+##logged rfu but cant view 
 all_merged %>% 
   filter(day > 0) %>% 
   ggplot(aes(x = time_elapsed_units, y = RFU, color = factor(r_concentration), group = file_name)) + 
-  geom_point() +
+  geom_point(col = "black", shape = 1, alpha = 0.6) + 
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(file_name ~ r_concentration, scales = "free_y") + 
   scale_color_viridis_d(name = "Phosphate level") +
