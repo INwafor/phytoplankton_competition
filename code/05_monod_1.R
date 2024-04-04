@@ -402,7 +402,7 @@ m2 %>%
 
 library(rootSolve)	
 
-m <- 0.1 ## mortality rate
+m <- 1 ## mortality rate
 
 
 #add coefficients somehow so th
@@ -431,12 +431,11 @@ monod_curve_mortality <- function(r_concentration, umax, ks){
   res
 }	
 
-
 rstars <- monod2 %>% 
   # mutate(rstar = uniroot.all(function(x) monod_curve_mortality(x, umax, ks), c(0.0, 50))) %>% ## numerical
   mutate(rstar_solve = ks*m/(umax-m))## analytical
 
-m_values <- tibble(m = 0.1)
+m_values <- tibble(m = 1)
 
 # Select the columns to keep in rstars_subset
 rstars_subset <- rstars %>%
@@ -445,14 +444,8 @@ rstars_subset <- rstars %>%
 # Add the 'm' column to rstars_subset
 rstars_subset <- bind_cols(rstars_subset, m_values)
 
-desired_order <- c("file_name", "ks", "umax", "m", "rstar_solve")
-
-# Reorder the columns in rstars_subset according to the desired order
-rstars_subset <- rstars_subset %>%
-  select(desired_order)
-
 find_rstar <- function(m) {
-  rstar <- monod_wide %>% 
+  rstar <- rstars_subset %>% 
     mutate(rstar_solve = ks*m/(umax-m)) %>% 
     mutate(mortality_rate = m)
   return(rstar)
@@ -461,14 +454,14 @@ find_rstar <- function(m) {
 # what is ms.. 
 ms <- seq(0.00, 0.3, by = 0.01)
 
-
 # Apply the function to all rows of rstars_subset
 all_rstars <- rstars_subset %>% 
   group_by(file_name) %>%
   do(find_rstar(.)) %>%
-  ungroup()
+  ungroup() %>%
+  filter(!between(row_number(), 7, 36))
 
-rstars2 <- rstars_subset %>% 
+rstars2 <- all_rstars %>% 
   filter(!is.na(rstar_solve)) %>% 
   # filter(population != 3) %>% 
   group_by(file_name, m) %>% 
@@ -479,36 +472,21 @@ rstars2 <- rstars_subset %>%
   facet_wrap( ~ m, scales = "free") +
   geom_point(shape = 1, color = "black")
 
-ggsave("figures/nitrate-r-star-mortality-rates.pdf", width = 20, height = 10)
 
-rstars2 %>% 
-  # filter(!is.na(rstar_solve)) %>% 
-  # filter(treatment == "B") %>% 
-  group_by(treatment, mortality_rate) %>% 
-  summarise_each(funs(mean, std.error), rstar_solve) %>% 
-  ggplot(aes(x = mortality_rate, y = mean, color = mortality_rate)) + geom_point() + 
-  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error, color = mortality_rate), width = 0.01) +
-  ylab("R* (uM N)") + xlab("Mortality rate") + scale_color_viridis_c() +
-  facet_wrap( ~ treatment, scales = "free") +
-  geom_point(shape = 1, color = "black") + geom_smooth(method = "lm")
-ggsave("figures/nitrate-r-star-mortality-rate-effect.pdf", width = 8, height = 6)
-
-
-
-monod_wide <- read_csv("data-processed/nitrate_monod_parameters.csv")
-
-rstars_a <- monod_wide %>% 
+rstars_a <- monod2 %>% 
   # mutate(rstar = uniroot.all(function(x) monod_curve_mortality(x, umax, ks), c(0.0, 50))) %>% ## numerical
   mutate(rstar_solve = ks*m/(umax-m)) %>%  ## analytical 
-  distinct(population, ks, umax, .keep_all = TRUE)
+  distinct(file_name, ks, umax, .keep_all = TRUE)
 
-
-rstars3 %>% 
-  group_by(treatment) %>% 
+## remove fist 8C and look at the ones near 0
+rstars_a %>% 
+  group_by(file_name) %>% 
+  filter(file_name != "Fist_8C") %>%
   summarise_each(funs(mean, std.error), rstar_solve) %>% 
-  ggplot(aes(x = reorder(treatment, mean), y = mean)) + geom_point() +
+  ggplot(aes(x = reorder(file_name, mean), y = mean)) + geom_point() +
   geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error),width = 0.1) +
-  ylab("R* (umol N)") + xlab("Selection treatment") + geom_point(aes(x = reorder(treatment, rstar_solve), y = rstar_solve, color = ancestor_id), size = 2, data = rstars3, alpha = 0.5) +
-  scale_color_discrete(name = "Ancestor") + geom_point()
-ggsave("figures/nitrate-r-star-means.png", width = 6, height = 4)
+  ylab("R* (umol P)") + xlab("Treatment") + geom_point(aes(x = reorder(file_name, rstar_solve), y = rstar_solve, color = file_name), size = 2, data = rstars_a, alpha = 0.5) +
+  scale_color_discrete(name = "file_name") + geom_point()
+
+
 
