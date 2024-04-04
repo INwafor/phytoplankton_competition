@@ -140,7 +140,7 @@ all_merged3 <- paste0(all_temp_RFU$well, all_temp_RFU$row)
 ##all merged says its 5760 
 all_temp_RFU$well_key <- all_merged3
 
-repeated_well_key <- rep(well_key, length.out = nrow(all_temp_RFU))
+#repeated_well_key <- rep(well_key, length.out = nrow(all_temp_RFU))
 
 # now we can drop the row and the well - then we have to add r_concentration - then you can graph
 ##removing row and well
