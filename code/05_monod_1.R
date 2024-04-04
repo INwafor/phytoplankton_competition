@@ -165,21 +165,36 @@ fit <- nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
            data = all_merged_growth2,
            start = list(umax = 1, ks = 1)) 
 
-# the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
+# set a line with mortality rate at 0.1
+all_merged_growth2 <- all_merged_growth2 %>%
+  mutate(r_concentration = factor(r_concentration, levels = concentration_order))
+# attempting to bootstrap this data and use it for my figures --------------
+library(boot)
+library(car)
+library(rTPC)
+library(nls.multstart)
+library(broom)
+library(tidyverse)
+library(patchwork)
+library(minpack.lm)
+
+## work on this in the morning to get the curve you wnated from before
 all_merged_growth2 %>%
-  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
-#  geom_smooth(method = "nls", formula = y ~ umax * (x / (ks + x)),
-              method.args = list(start = list(umax = 1, ks = 1),
-              se = FALSE, color = "red") +
+  geom_smooth(method = "nls", 
+              formula = y ~ umax * (x / (ks + x)),
+              method.args = list(start = list(umax = 0.5, ks = 0.5)),
+              se = FALSE) +
+  geom_line() +
   facet_wrap(~ file_name) +
-  #geom_errorbar(aes(ymin=estimate-best.se, ymax=estimate + best.se), width=.2) + 
-  #geom_line(data = preds, aes(x = r_concentration, y = .fitted), color = "red", size = 1) +
+  #geom_errorbar(aes(ymin = estimate - best.se, ymax = estimate + best.se), width = 0.2) + 
+  #geom_line(data = preds, aes(x = as.factor(r_concentration), y = .fitted), color = "blue", size = 1) +
   ylab("Exponential growth rate (/day)") + 
   xlab("Phosphate concentration (uM)") +
-  scale_x_discrete(limits = concentration_order)
-
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  expand_limits(x = 0.5) +
+  theme_gray()
 
 growth_rates <- phosphate_exp %>%
   group_by(file_name, r_concentration) %>%
@@ -188,7 +203,7 @@ growth_rates <- phosphate_exp %>%
               control = nls.control(maxiter=100, minFactor=1/204800000)))) %>% 
   ungroup() 
 
-# growth rate curves testing  -------------------------------
+# growth rate curves testing -------------------------------
 ## make the line red and fix background to be nicer colour, put more units on the y-axis 
 growth_rates %>% 
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
@@ -262,12 +277,12 @@ growth_sum_p2 %>%
 
 
 # Monod fits with the growthTools estimates -------------------------------
-fit_model2 <- growth_sum_p2
+fit_model2 <- growth_sum_p2 %>%
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
     rename(estimate = mu) %>% 
     group_by(file_name) %>% 
   nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
-      data = data,
+      data = growth_sum_p2,
       start = list(ks = 0.5, umax = 0.5),
       algorithm = "port",
       control = nls.control(maxiter = 500, minFactor = 1/204800000))
@@ -290,6 +305,31 @@ preds4 <- bind_cols(growth_sum_p2, preds2)%>%
   rename("file_name" = file_name_1,
          "r_concentration" = r_concentration_7)
 
+# the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
+preds4 %>%
+  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
+  ggplot(aes(x = r_concentration, y = estimate)) + 
+  geom_point() +
+  geom_smooth(method = "nls", formula = y ~ umax * (x / (ks + x)),
+              method.args = list(start = list(umax = 0.5, ks = 0.5)),
+              se = FALSE) +
+  facet_wrap(~ file_name) +
+  geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
+  geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "red", size = 1) +
+  ylab("Exponential growth rate (/day)") + 
+  xlab("Phosphate concentration (uM)") +
+  scale_x_discrete(limits = concentration_order)
+
+preds4 %>%
+  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
+  ggplot(aes(x = r_concentration, y = estimate)) + 
+  geom_point() +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "red") +  # Use linear model
+  facet_wrap(~ file_name) +
+  geom_errorbar(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = .2) + 
+  ylab("Exponential growth rate (/day)") + 
+  xlab("Phosphate concentration (uM)") +
+  scale_x_discrete(limits = concentration_order)
 
 bs_split <- fit_model2 %>% 
   select(file_name, r_concentration, mu) %>% 
@@ -298,9 +338,8 @@ bs_split <- fit_model2 %>%
   split(.$file_name)
 
 prediction_function <- function(df) {
-  
   monodcurve <- function(x, umax, ks) {
-    growth_rate <- umax * (x / (ks + x))
+    growth_rate <- umax * (as.numeric(x) / (as.numeric(ks) + as.numeric(x)))
     return(growth_rate)
   }
   
@@ -309,7 +348,7 @@ prediction_function <- function(df) {
     return(y)
   }
   
-  x <- seq(0, 50, by = 1)
+  x <- c("0", "0.5", "1", "2", "4", "6", "8", "10", "20", "35", "50")
   
   preds <- pred(x, coefficients$umax[[1]], coefficients$ks[[1]])
   
@@ -326,15 +365,18 @@ all_preds_p <- bs_split %>%
 
 ##pred lines is wrong too low and exactly thr same for each
 growth_sum_p2 %>% 
-  mutate(estimate = mu) %>% 
-  mutate(r_concentration = as.numeric(r_concentration)) %>% 
-  ggplot(aes(x= r_concentration, y= estimate)) + geom_point() +
-  geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
-  geom_line(data= all_preds_p, aes(x=r_concentration.x, y=growth_rate, color = r_concentration.x, group = file_name), size = 1) +
-  facet_wrap(~file_name) +
-  geom_vline(xintercept = 0) +
-  geom_hline(yintercept = 0) +
-  ylab("Exponential growth rate (/day)") + xlab("Phosphate concentration (uM)") + xlim(0.5, 50) + ylim(-0.5, 1.5)
+  mutate(estimate = mu,
+         r_concentration = as.numeric(r_concentration)) %>% 
+  ggplot(aes(x = r_concentration, y = estimate)) + 
+  geom_point() +
+  geom_errorbar(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = 0.2) + 
+  geom_line(data = all_preds_p %>% mutate(r_concentration.x = as.numeric(r_concentration.x)), 
+            aes(x = r_concentration.x, y = growth_rate, color = r_concentration.x, group = file_name), 
+            size = 1) +
+  facet_wrap(~ file_name) +
+  geom_vline(xintercept = 0) + geom_hline(yintercept = 0) +
+  ylab("Exponential growth rate (/day)") +
+  xlab("Phosphate concentration (uM)") + xlim(0.5, 50) + ylim(-0.5, 1.5)
 
 #ggsave("figures/nitrate_monod_growth_tools2.pdf", width = 15, height = 10)
 
