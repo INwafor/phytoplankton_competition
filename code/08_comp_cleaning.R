@@ -100,8 +100,12 @@ ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
 
 library(stats)
 ##linear regression almost works - same problem aviva had
-lm_result <- lm(green_algae_ug ~ temp + replicate, data = comp)
-print(summary(lm_result))
+lm_result_g <- lm(green_algae_ug ~ temp, data = comp)
+lm_result_d <- lm(diatom_ug ~ temp, data = comp)
+
+print(summary(lm_result_g))
+print(summary(lm_result_d))
+
 
 kruskal_test_result <- kruskal.test(green_algae_ug ~ temp, data = comp)
 print(kruskal_test_result)
