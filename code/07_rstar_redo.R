@@ -135,10 +135,10 @@ letters_vec <- rep(c("A", "B", "C", "D", "E", "F", "G", "H"), length.out = nrow(
 # Add the letter column to your dataframe
 all_temp_RFU$well <- letters_vec
 
-all_merged <- paste0(all_temp_RFU$well, all_temp_RFU$row)
+all_merged3 <- paste0(all_temp_RFU$well, all_temp_RFU$row)
 
 ##all merged says its 5760 
-all_temp_RFU$well_key <- all_merged
+all_temp_RFU$well_key <- all_merged3
 
 repeated_well_key <- rep(well_key, length.out = nrow(all_temp_RFU))
 

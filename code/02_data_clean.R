@@ -178,3 +178,4 @@ colnames(all_temp_RFU)[colnames(all_temp_RFU) == "well_key"] <- "well"
 
 ##adding in R concentration - now we can left bind with plate layout
 all_merged <- left_join(all_temp_RFU, plate_layout, by = "well")
+
