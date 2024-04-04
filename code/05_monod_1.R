@@ -165,7 +165,7 @@ fit <- nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
            data = all_merged_growth2,
            start = list(umax = 1, ks = 1)) 
 
-# set a line with mortality rate at 0.1
+
 all_merged_growth2 <- all_merged_growth2 %>%
   mutate(r_concentration = factor(r_concentration, levels = concentration_order))
 # attempting to bootstrap this data and use it for my figures --------------
@@ -179,6 +179,7 @@ library(patchwork)
 library(minpack.lm)
 
 ## work on this in the morning to get the curve you wnated from before
+# set a line with mortality rate at 0.1
 all_merged_growth2 %>%
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
@@ -404,10 +405,25 @@ library(rootSolve)
 m <- 0.1 ## mortality rate
 
 
+#add coefficients somehow so th
 monod_wide <-  fit_model2 %>% 
   select(file_name, r_concentration, mu) %>% 
   spread(key = r_concentration, value = mu)
 
+monod2 <- left_join(coefficients, monod_wide, by = "file_name")
+monod2 <- monod2 %>%
+  filter(!between(row_number(), 7, 12))%>%
+  select_if(~!any(is.na(.))) %>%
+  rename("mu_0_5" = `0.5.y`,
+         "mu_1" = `1.y`,
+         "mu_2" = `2.y`,
+         "mu_4" = `4.y`,
+         "mu_6" = `6.y`,
+         "mu_8" = `8.y`,
+         "mu_10" = `10.y`,
+         "mu_20" = `20.y`,
+         "mu_35" = `35.y`,
+         "mu_50" = `50.y`)
 
 ### define the Monod curve, with a mortality rate of 0.1
 monod_curve_mortality <- function(r_concentration, umax, ks){
@@ -416,17 +432,24 @@ monod_curve_mortality <- function(r_concentration, umax, ks){
 }	
 
 
-rstars <- monod_wide %>% 
+rstars <- monod2 %>% 
   # mutate(rstar = uniroot.all(function(x) monod_curve_mortality(x, umax, ks), c(0.0, 50))) %>% ## numerical
-  mutate(rstar_solve = ks*m/(umax-m)) ## analytical
+  mutate(rstar_solve = ks*m/(umax-m))## analytical
 
-write_csv(monod_wide, "data-processed/nitrate_monod_parameters.csv")
+m_values <- tibble(m = 0.1)
 
-monod_wide <- read_csv("data-processed/nitrate_monod_parameters.csv")
-monod_wide <- monod_fits %>% 
-  select(population, term, estimate) %>% 
-  spread(key = term, value = estimate)
+# Select the columns to keep in rstars_subset
+rstars_subset <- rstars %>%
+  select(-mu_0_5, -mu_1, -mu_2, -mu_4, -mu_6, -mu_8, -mu_10, -mu_20, -mu_35, -mu_50)
 
+# Add the 'm' column to rstars_subset
+rstars_subset <- bind_cols(rstars_subset, m_values)
+
+desired_order <- c("file_name", "ks", "umax", "m", "rstar_solve")
+
+# Reorder the columns in rstars_subset according to the desired order
+rstars_subset <- rstars_subset %>%
+  select(desired_order)
 
 find_rstar <- function(m) {
   rstar <- monod_wide %>% 
@@ -435,22 +458,25 @@ find_rstar <- function(m) {
   return(rstar)
 }
 
+# what is ms.. 
 ms <- seq(0.00, 0.3, by = 0.01)
 
-all_rstars <- ms %>% 
-  map_df(find_rstar, .id = "ms")
 
+# Apply the function to all rows of rstars_subset
+all_rstars <- rstars_subset %>% 
+  group_by(file_name) %>%
+  do(find_rstar(.)) %>%
+  ungroup()
 
-rstars2 <- left_join(all_rstars, treatments, by = "population")
-rstars2 %>% 
+rstars2 <- rstars_subset %>% 
   filter(!is.na(rstar_solve)) %>% 
   # filter(population != 3) %>% 
-  group_by(treatment, mortality_rate) %>% 
+  group_by(file_name, m) %>% 
   summarise_each(funs(mean, std.error), rstar_solve) %>% 
-  ggplot(aes(x = reorder(treatment, mean), y = mean, color = mortality_rate)) + geom_point() + 
-  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error, color = mortality_rate), width = 0.2) +
+  ggplot(aes(x = reorder(file_name, mean), y = mean, color = m)) + geom_point() + 
+  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error, color = m), width = 0.2) +
   ylab("R* (uM N)") + xlab("Selection treatment") + scale_color_viridis_c() +
-  facet_wrap( ~ mortality_rate, scales = "free") +
+  facet_wrap( ~ m, scales = "free") +
   geom_point(shape = 1, color = "black")
 
 ggsave("figures/nitrate-r-star-mortality-rates.pdf", width = 20, height = 10)
