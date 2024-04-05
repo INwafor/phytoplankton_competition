@@ -314,7 +314,10 @@ preds4 <- bind_cols(growth_sum_p2, preds2)%>%
          "r_concentration" = r_concentration_7)
 
 # the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
-preds4 %>%
+scen <- preds4 %>%
+  filter(file_name %in% c("Scen_21C", "Scen_30C"))
+  
+scen %>%
   mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
