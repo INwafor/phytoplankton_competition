@@ -106,6 +106,13 @@ lm_result_d <- lm(diatom_ug ~ temp, data = comp)
 print(summary(lm_result_g))
 print(summary(lm_result_d))
 
+#Tukeys HSD post hoc test
+model_2 <- aov(green_algae_ug ~ temp, data = comp)
+tukey_results2 <- TukeyHSD(model_2)
+tukey_results2
 
-kruskal_test_result <- kruskal.test(green_algae_ug ~ temp, data = comp)
-print(kruskal_test_result)
+model_g <- aov(diatom_ug ~ temp, data = comp)
+tukey_results <- TukeyHSD(model_g)
+
+tukey_results
+

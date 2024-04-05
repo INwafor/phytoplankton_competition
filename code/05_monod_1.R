@@ -178,8 +178,6 @@ library(tidyverse)
 library(patchwork)
 library(minpack.lm)
 
-## work on this in the morning to get the curve you wnated from before
-# set a line with mortality rate at 0.1
 all_merged_growth2 %>%
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
@@ -188,14 +186,16 @@ all_merged_growth2 %>%
               method.args = list(start = list(umax = 0.5, ks = 0.5)),
               se = FALSE) +
   geom_line() +
+  geom_smooth(method = "nls", se = FALSE, color = "blue") +
+  geom_hline(yintercept = 0.1, linetype = "solid", color = "red") +  # Add horizontal line at y = 0.5
   facet_wrap(~ file_name) +
-  #geom_errorbar(aes(ymin = estimate - best.se, ymax = estimate + best.se), width = 0.2) + 
-  #geom_line(data = preds, aes(x = as.factor(r_concentration), y = .fitted), color = "blue", size = 1) +
   ylab("Exponential growth rate (/day)") + 
   xlab("Phosphate concentration (uM)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +  
   expand_limits(x = 0.5) +
   theme_gray()
+
+linear_model <- lm(estimate ~ r_concentration, data = all_merged_growth2)
 
 growth_rates <- phosphate_exp %>%
   group_by(file_name, r_concentration) %>%
@@ -205,28 +205,35 @@ growth_rates <- phosphate_exp %>%
   ungroup() 
 
 # growth rate curves testing -------------------------------
-## make the line red and fix background to be nicer colour, put more units on the y-axis 
+## work on this in the morning to get the curve you wnated from before
+# set a line with mortality rate at 0.2
+
 growth_rates %>% 
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   geom_smooth(method = "loess", se = FALSE) + 
   facet_wrap(~ file_name) + 
-  geom_hline(yintercept = 0) + ylab("Exponential growth rate (/day)") +
+  geom_hline(yintercept = 0.1) + ylab("Exponential growth rate (/day)") +
   xlab("Phosphate concentration (uM)") 
 
+growth_rates <- growth_rates %>%
+  mutate(r_concentration = as.numeric(r_concentration))
 
-growth_rates %>%
-  mutate(r_concentration = as.numeric(r_concentration)) %>%
+scen_growth_rates <- growth_rates %>%
+  filter(file_name %in% c("Scen_21C", "Scen_30C"))
+
+# Plot the subsetted data
+scen_growth_rates %>%
   ggplot(aes(x = r_concentration, y = estimate)) +
-  geom_point(col = "black", size = 2.5) + 
-  geom_smooth(method = "loess", se = FALSE, color = "red", size = 1.5) +  # Change line color to red
+  geom_point() +
+  stat_summary(geom = "line", fun = mean, color = "lightblue", size = 1) +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  geom_hline(yintercept = 0.2, linetype = "solid", color = "red") +
   facet_wrap(~ file_name) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +  # Add horizontal line at y = 0
   ylab("Exponential growth rate (/day)") +
-  xlab("Phosphate concentration (uM)") + 
-  theme_cowplot() +
-  theme(panel.grid.major = element_line(color = "darkgrey", linetype = "solid"),
-        panel.grid.minor = element_blank())
+  xlab("Phosphate concentration (uM)")
+
+##anova??
 
 # growth rates with growthTools - complete -------------------------------------------
 library(growthTools)
@@ -402,7 +409,7 @@ m2 %>%
 
 library(rootSolve)	
 
-m <- 1 ## mortality rate
+m <- 0.2 ## mortality rate
 
 
 #add coefficients somehow so th
@@ -435,7 +442,7 @@ rstars <- monod2 %>%
   # mutate(rstar = uniroot.all(function(x) monod_curve_mortality(x, umax, ks), c(0.0, 50))) %>% ## numerical
   mutate(rstar_solve = ks*m/(umax-m))## analytical
 
-m_values <- tibble(m = 1)
+m_values <- tibble(m = 0.2)
 
 # Select the columns to keep in rstars_subset
 rstars_subset <- rstars %>%
