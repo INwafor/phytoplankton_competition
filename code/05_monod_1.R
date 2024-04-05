@@ -37,7 +37,7 @@ custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 
 library(dplyr)
 library(RColorBrewer)
-
+## colours still not saving. 
 rfu_df %>% 
   filter(day > 0) %>% 
   ggplot(aes(x = time_elapsed_units, y = log(RFU), color = factor(r_concentration), group = file_name)) + 
@@ -48,7 +48,7 @@ rfu_df %>%
     values = c("hotpink4", "#9e0142","#d53e4f","sienna1","#fbcf51", "#b6f598","#4bc425","#66c2a5","#3288bd","#5e4fa2","#d7a4dd")) +
   ylab("") + 
   xlab("") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+ ggsave("rfugrowth.png", plot, width = 20, height = 15)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position = "none") #+ ggsave("rfugrowth.png", plot, width = 20, height = 15)
 
 phosphate_exp <- rfu_df %>% 
   select(-read) %>%
@@ -80,6 +80,23 @@ all_merged_growth2 %>%
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   ggplot(aes(x = r_concentration, y = estimate)) + geom_point() +
   facet_wrap(~ file_name) +
+  ylab("Growth rate (per day)") + xlab("Resource level") 
+
+##final curve monod estimate
+sep_growth2 <- all_merged_growth2 %>%
+  separate(file_name, into = c("species", "temperature"), sep = "_")
+
+##set a line at 0 and only display points that lie with 0.5 in both directions of that line 
+## then the other points should just be a smooth line 
+sep_growth2 %>% 
+  mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
+  arrange(r_concentration) %>% 
+  ggplot(aes(x = r_concentration, y = estimate, color = species)) + geom_point() +
+  geom_smooth(method = "loess", span = 0.5, se = FALSE) + 
+  facet_wrap(~ temperature) +
+  scale_color_manual(
+    values = c("#9e0142","#3288bd")) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   ylab("Growth rate (per day)") + xlab("Resource level") 
 
 ## individual growth plots{
@@ -232,6 +249,7 @@ scen_growth_rates %>%
   facet_wrap(~ file_name) +
   ylab("Exponential growth rate (/day)") +
   xlab("Phosphate concentration (uM)")
+
 
 ##anova??
 
@@ -485,15 +503,23 @@ rstars_a <- monod2 %>%
   mutate(rstar_solve = ks*m/(umax-m)) %>%  ## analytical 
   distinct(file_name, ks, umax, .keep_all = TRUE)
 
-## remove fist 8C and look at the ones near 0
-rstars_a %>% 
-  group_by(file_name) %>% 
-  filter(file_name != "Fist_8C") %>%
-  summarise_each(funs(mean, std.error), rstar_solve) %>% 
-  ggplot(aes(x = reorder(file_name, mean), y = mean)) + geom_point() +
-  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error),width = 0.1) +
-  ylab("R* (umol P)") + xlab("Treatment") + geom_point(aes(x = reorder(file_name, rstar_solve), y = rstar_solve, color = file_name), size = 2, data = rstars_a, alpha = 0.5) +
-  scale_color_discrete(name = "file_name") + geom_point()
+rstars_a <- rstars_a %>%
+  filter(file_name != "Fist_8C",
+         file_name != "Scen_30C")
 
-
-
+rstars_a %>%
+  group_by(file_name) %>%
+  summarise_each(funs(mean, std.error), rstar_solve) %>%
+  ggplot(aes(x = reorder(file_name, mean), y = mean)) +
+  geom_point(size = 4, aes(color = file_name)) +  # Increase point size and match colors to file_name
+  geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error), width = 0.1) +
+  geom_text(aes(label = round(mean, 2)), vjust = 2, size = 3.5, color = "black") + 
+  scale_color_manual(
+    values = c("#9e0142","#fbcf51","#4bc425","#3288bd","#d7a4dd")) +
+  ylab("R* (umol P)") +
+  xlab("Treatment") +
+  theme_classic() +
+  theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8)) +
+  ylim(-0.1, 0.2)
