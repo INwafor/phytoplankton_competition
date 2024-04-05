@@ -36,19 +36,19 @@ rfu_df <- bind_rows(filtered_all_merged, all_merged2)
 custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 
 library(dplyr)
+library(RColorBrewer)
 
-plot <- rfu_df %>% 
+rfu_df %>% 
   filter(day > 0) %>% 
   ggplot(aes(x = time_elapsed_units, y = log(RFU), color = factor(r_concentration), group = file_name)) + 
   geom_point() + 
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(file_name ~ r_concentration, scales = "free_y") + 
-  scale_color_viridis_d(name = "Phosphate level") +
-  ylab("logged RFU") + 
-  xlab("Time elapsed (units of days)") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-#ggsave("plot.png", plot, width = 20, height = 15)
+  scale_color_manual(
+    values = c("hotpink4", "#9e0142","#d53e4f","sienna1","#fbcf51", "#b6f598","#4bc425","#66c2a5","#3288bd","#5e4fa2","#d7a4dd")) +
+  ylab("") + 
+  xlab("") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+ ggsave("rfugrowth.png", plot, width = 20, height = 15)
 
 phosphate_exp <- rfu_df %>% 
   select(-read) %>%
@@ -314,10 +314,7 @@ preds4 <- bind_cols(growth_sum_p2, preds2)%>%
          "r_concentration" = r_concentration_7)
 
 # the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
-scen <- preds4 %>%
-  filter(file_name %in% c("Scen_21C", "Scen_30C"))
-  
-scen %>%
+preds4 %>%
   mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
