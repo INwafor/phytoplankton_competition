@@ -239,7 +239,7 @@ growth_rates <- growth_rates %>%
 scen_growth_rates <- growth_rates %>%
   filter(file_name %in% c("Scen_21C", "Scen_30C"))
 
-# Plot the subsetted data
+# Plot the subsetted data - !!! graph used 
 scen_growth_rates %>%
   ggplot(aes(x = r_concentration, y = estimate)) +
   geom_point() +
@@ -251,12 +251,13 @@ scen_growth_rates %>%
   xlab("Phosphate concentration (uM)")
 
 
-##anova??
-
-# growth rates with growthTools - complete -------------------------------------------
+# growth rates with growthTools  -------------------------------------------
 library(growthTools)
 
 str(rfu_df)
+
+rfu_df <- rfu_df %>%
+  filter(treatment != "Blank")
 
 b2 <- rfu_df %>% 
   select(-read) %>%
@@ -313,6 +314,7 @@ fit_model2 <- growth_sum_p2 %>%
       algorithm = "port",
       control = nls.control(maxiter = 500, minFactor = 1/204800000))
 
+##expecting a model of class nLS - should give you a model of class nls
 preds2 <- growth_sum_p2 %>%
   mutate(r_concentration = as.numeric(r_concentration)) %>%
   rename(estimate = mu) %>% 
@@ -331,20 +333,22 @@ preds4 <- bind_cols(growth_sum_p2, preds2)%>%
   rename("file_name" = file_name_1,
          "r_concentration" = r_concentration_7)
 
-# the x axis is not spread across the whole graph and is all clumped overlapping eachother (the ticks) on one side, fix this so it is evenly distributed across the graphs
+#DOUBLE CHECK - bootstrap to all the variables 
+#
 preds4 %>%
-  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
+  #mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
   geom_smooth(method = "nls", formula = y ~ umax * (x / (ks + x)),
               method.args = list(start = list(umax = 0.5, ks = 0.5)),
               se = FALSE) +
-  facet_wrap(~ file_name) +
+  facet_wrap(~ file_name, scales = "free") +
   geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
   geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "red", size = 1) +
   ylab("Exponential growth rate (/day)") + 
-  xlab("Phosphate concentration (uM)") +
-  scale_x_discrete(limits = concentration_order)
+  xlab("Phosphate concentration (uM)")
+
+##remove 0 from Scen_30C from the dataset and see how the model fits - for fun not justifiable
 
 preds4 %>%
   mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
@@ -427,7 +431,7 @@ m2 %>%
 
 library(rootSolve)	
 
-m <- 0.2 ## mortality rate
+m <- 0.1 ## mortality rate
 
 
 #add coefficients somehow so th
@@ -460,7 +464,7 @@ rstars <- monod2 %>%
   # mutate(rstar = uniroot.all(function(x) monod_curve_mortality(x, umax, ks), c(0.0, 50))) %>% ## numerical
   mutate(rstar_solve = ks*m/(umax-m))## analytical
 
-m_values <- tibble(m = 0.2)
+m_values <- tibble(m = 0.1)
 
 # Select the columns to keep in rstars_subset
 rstars_subset <- rstars %>%
@@ -523,3 +527,4 @@ rstars_a %>%
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 8)) +
   ylim(-0.1, 0.2)
+
