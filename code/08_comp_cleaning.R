@@ -86,8 +86,8 @@ ggplot(df_ug, aes(x = variable, y = value, fill = variable)) +
   guides(fill=guide_legend(title="")) +
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
-        axis.text.x = element_text(size = 8)) 
-#+ ggsave(filename = file.path("figures","comp_ug.png"), width = 15, height = 10)
+        axis.text.x = element_text(size = 8, face = ifelse(seq_along(levels(df_ml$variable)) <= 2, "italic", "plain"))) +
+  ggsave(filename = file.path("figures","comp_ml_final.png"), width = 15, height = 10)
   
 
 comp_ml_filtered <- comp_ml %>%
@@ -103,14 +103,15 @@ df_ml <- subset(long_ml, variable %in% c("S.quadricauda", "F.pelliculosa", "Tota
 # Create box plot for green_algae_ml, diatom_ml, and tot_conc_ml
 ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
   geom_boxplot() +
-  facet_wrap(~ temperature, scales = 'free_y') +
+  facet_wrap(~ temperature, scales = 'free') +
   labs(x = '', y = 'Average Algae Density (mL)') + 
   scale_fill_manual(values=c("#71C231","#925133","#D1BF58")) +
   guides(fill=guide_legend(title="")) +
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
-        axis.text.x = element_text(size = 8)) 
-#+ ggsave(filename = file.path("figures","comp_ug.png"), width = 15, height = 10)
+        axis.text.x = element_text(size = 8, face = ifelse(seq_along(levels(df_ml$variable)) <= 2, "italic", "plain"))) +
+  scale_x_discrete(labels = c(expression(italic("S.quadricauda")), expression(italic("F.pelliculosa")), "Total Density")) 
+#+ ggsave(filename = file.path("figures","comp_ug_final.png"), width = 15, height = 10)
 
 
 ##THEN PERFORM ANOVA OR T TEST STATS
@@ -126,10 +127,19 @@ print(summary(lm_result_d))
 #Tukeys HSD post hoc test
 model_2 <- aov(green_algae_ug ~ temp, data = comp)
 tukey_results2 <- TukeyHSD(model_2)
-tukey_results2
+view(tukey_results2)
 
 model_g <- aov(diatom_ug ~ temp, data = comp)
 tukey_results <- TukeyHSD(model_g)
 
-tukey_results
+view(tukey_results)
 
+# repeat for ml 
+model_3 <- aov(green_algae_ml ~ temp, data = comp)
+tukey_results3 <- TukeyHSD(model_3)
+view(tukey_results3)
+
+model_4 <- aov(diatom_ml ~ temp, data = comp)
+tukey_results4 <- TukeyHSD(model_4)
+
+view(tukey_results4)

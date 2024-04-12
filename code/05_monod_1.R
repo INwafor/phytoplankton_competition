@@ -49,6 +49,7 @@ rfu_df %>%
   ylab("") + 
   xlab("") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position = "none") #+ ggsave("rfugrowth.png", plot, width = 20, height = 15)
+## how to save and export the plot !! Figure 1
 
 phosphate_exp <- rfu_df %>% 
   select(-read) %>%
@@ -98,6 +99,8 @@ sep_growth2 %>%
     values = c("#9e0142","#3288bd")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   ylab("Growth rate (per day)") + xlab("Resource level") 
+## fix and separate by file_name? add line - Figure 2
+
 
 ## individual growth plots{
 Fist_21C_growth2 %>% 
@@ -306,13 +309,16 @@ growth_sum_p2 %>%
 # Monod fits with the growthTools estimates -------------------------------
 fit_model2 <- growth_sum_p2 %>%
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
-    rename(estimate = mu) %>% 
+    #rename(estimate = mu) %>% 
     group_by(file_name) %>% 
-  nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
-      data = growth_sum_p2,
+  nls(mu ~ umax * (r_concentration / (ks + r_concentration)),
+      data = .,
       start = list(ks = 0.5, umax = 0.5),
       algorithm = "port",
       control = nls.control(maxiter = 500, minFactor = 1/204800000))
+
+str(fit_model2)
+class(fit_model2) ##USE THIS FOR BOOTSTRAPPING
 
 ##expecting a model of class nLS - should give you a model of class nls
 preds2 <- growth_sum_p2 %>%
@@ -346,20 +352,12 @@ preds4 %>%
   geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
   geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "red", size = 1) +
   ylab("Exponential growth rate (/day)") + 
-  xlab("Phosphate concentration (uM)")
+  xlab("Phosphate concentration (uM)") 
+
+## this would be the monod grave to use 
+
 
 ##remove 0 from Scen_30C from the dataset and see how the model fits - for fun not justifiable
-
-preds4 %>%
-  mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
-  ggplot(aes(x = r_concentration, y = estimate)) + 
-  geom_point() +
-  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, color = "red") +  # Use linear model
-  facet_wrap(~ file_name) +
-  geom_errorbar(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = .2) + 
-  ylab("Exponential growth rate (/day)") + 
-  xlab("Phosphate concentration (uM)") +
-  scale_x_discrete(limits = concentration_order)
 
 bs_split <- fit_model2 %>% 
   select(file_name, r_concentration, mu) %>% 
