@@ -48,8 +48,15 @@ rfu_df %>%
     values = c("hotpink4", "#9e0142","#d53e4f","sienna1","#fbcf51", "#b6f598","#4bc425","#66c2a5","#3288bd","#5e4fa2","#d7a4dd")) +
   ylab("") + 
   xlab("") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position = "none")  
-  #+ggsave("rfu_final.png", width = 10, height = 6, dpi = 300)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.background = element_rect(size = 0.5),
+        strip.text = element_text(size = 8),
+        panel.spacing = unit(-0.2, "lines"),
+        legend.position = "none")
++ 
+  ggsave("rfu_final3.png", width = 15, height = 10, dpi = 300)
+
+options(repr.plot.width = 15, repr.plot.height = 10)
 
 phosphate_exp <- rfu_df %>% 
   select(-read) %>%
