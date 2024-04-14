@@ -49,7 +49,7 @@ rfu_df %>%
   ylab("") + 
   xlab("") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
-        axis.text.y = element_text(size = 9),
+        axis.text.y = element_text(size = 8),
         strip.text = element_text(size = 8),         
         panel.spacing = unit(1, "lines"),
         panel.grid.major = element_line(color = "gray", linetype = "dotted"),
