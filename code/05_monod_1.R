@@ -107,7 +107,6 @@ all_merged_growth2 %>%
   geom_point(data = highlight_points, aes(x = r_concentration, y = estimate), shape = 1, size = 3, color = "red", inherit.aes = FALSE) #+ ggsave("growth_rates_final.png", width = 15, height = 10, dpi = 300)
 
 
-
 ## individual growth plots{
 Fist_21C_growth2 %>% 
   ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + 
