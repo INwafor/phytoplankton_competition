@@ -99,6 +99,7 @@ comp_ml_filtered <- comp_ml %>%
 long_ml <- reshape2::melt(comp_ml_filtered, id.vars = c('temperature', 'replicate'))
 
 df_ml <- subset(long_ml, variable %in% c("S.quadricauda", "F.pelliculosa", "Total Density"))
+df_ml <- df_ml[-c(18, 64), , drop = FALSE]
 
 # Create box plot for green_algae_ml, diatom_ml, and tot_conc_ml
 ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
@@ -110,8 +111,9 @@ ggplot(df_ml, aes(x = variable, y = value, fill = variable)) +
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 8, face = ifelse(seq_along(levels(df_ml$variable)) <= 2, "italic", "plain"))) +
-  scale_x_discrete(labels = c(expression(italic("S.quadricauda")), expression(italic("F.pelliculosa")), "Total Density")) 
-#+ ggsave(filename = file.path("figures","comp_ug_final.png"), width = 15, height = 10)
+  scale_x_discrete(labels = c(expression(italic("S.quadricauda")), expression(italic("F.pelliculosa")), "Total Density")) #+ ggsave(filename = file.path("figures","comp_ug_final2.png"), width = 15, height = 10)
+
+
 
 
 ##THEN PERFORM ANOVA OR T TEST STATS
