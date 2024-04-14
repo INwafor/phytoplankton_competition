@@ -518,11 +518,11 @@ rstars_a %>%
   geom_text(aes(label = round(mean, 2)), vjust = 2, size = 3.5, color = "black") + 
   scale_color_manual(
     values = c("#9e0142","#fbcf51","#4bc425","#3288bd","#d7a4dd")) +
-  ylab("R* (umol P)") +
-  xlab("Treatment") +
+  labs(y = "R* (umol P)", x = "Treatment", color = "Treatment") +
   theme_classic() +
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 8)) +
-  ylim(-0.1, 0.2)
+  ylim(-0.1, 0.2) 
+# ggsave(filename = file.path("figures","rstar_final.png"), width = 15, height = 10)
 

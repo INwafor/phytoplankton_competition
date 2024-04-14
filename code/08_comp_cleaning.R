@@ -86,8 +86,8 @@ ggplot(df_ug, aes(x = variable, y = value, fill = variable)) +
   guides(fill=guide_legend(title="")) +
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
-        axis.text.x = element_text(size = 8, face = ifelse(seq_along(levels(df_ml$variable)) <= 2, "italic", "plain"))) +
-  ggsave(filename = file.path("figures","comp_ml_final.png"), width = 15, height = 10)
+        axis.text.x = element_text(size = 8, face = ifelse(seq_along(levels(df_ml$variable)) <= 2, "italic", "plain"))) 
+#+ggsave(filename = file.path("figures","comp_ml_final.png"), width = 15, height = 10)
   
 
 comp_ml_filtered <- comp_ml %>%
