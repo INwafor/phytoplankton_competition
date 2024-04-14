@@ -92,19 +92,20 @@ all_merged_growth2 %>%
 sep_growth2 <- all_merged_growth2 %>%
   separate(file_name, into = c("species", "temperature"), sep = "_")
 
-##set a line at 0 and only display points that lie with 0.5 in both directions of that line 
-## then the other points should just be a smooth line 
-sep_growth2 %>% 
+highlight_points <- all_merged_growth2 %>%
+  filter(r_concentration == 4)
+
+all_merged_growth2 %>% 
   mutate(r_concentration = factor(r_concentration, levels = concentration_order)) %>%
   arrange(r_concentration) %>% 
-  ggplot(aes(x = r_concentration, y = estimate, color = species)) + geom_point() +
+  ggplot(aes(x = r_concentration, y = estimate, color = file_name)) + geom_point(size = 2) +
   geom_smooth(method = "loess", span = 0.5, se = FALSE) + 
-  facet_wrap(~ temperature) +
-  scale_color_manual(
-    values = c("#9e0142","#3288bd")) +
+  facet_wrap(~ file_name) +
+  scale_color_manual(name = "Treatment", values = c("#9e0142","#fbcf51","#4bc425","#3288bd","#d7a4dd","#ffa300")) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  ylab("Growth rate (per day)") + xlab("Resource level") 
-## fix and separate by file_name? add line - Figure 2
+  ylab("Per capita growth rate") + xlab("Resource level (uM)") +
+  geom_point(data = highlight_points, aes(x = r_concentration, y = estimate), shape = 1, size = 3, color = "red", inherit.aes = FALSE) #+ ggsave("growth_rates_final.png", width = 15, height = 10, dpi = 300)
+
 
 
 ## individual growth plots{
