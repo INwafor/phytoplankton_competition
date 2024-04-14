@@ -37,7 +37,7 @@ custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 
 library(dplyr)
 library(RColorBrewer)
-## colours still not saving. 
+
 rfu_df %>% 
   filter(day > 0) %>% 
   ggplot(aes(x = time_elapsed_units, y = log(RFU), color = factor(r_concentration), group = file_name)) + 
@@ -48,8 +48,8 @@ rfu_df %>%
     values = c("hotpink4", "#9e0142","#d53e4f","sienna1","#fbcf51", "#b6f598","#4bc425","#66c2a5","#3288bd","#5e4fa2","#d7a4dd")) +
   ylab("") + 
   xlab("") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position = "none") #+ ggsave("rfugrowth.png", plot, width = 20, height = 15)
-## how to save and export the plot !! Figure 1
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + theme(legend.position = "none")  
+  #+ggsave("rfu_final.png", width = 10, height = 6, dpi = 300)
 
 phosphate_exp <- rfu_df %>% 
   select(-read) %>%
