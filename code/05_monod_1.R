@@ -107,7 +107,8 @@ all_merged_growth2 %>%
   geom_point(data = highlight_points, aes(x = r_concentration, y = estimate), shape = 1, size = 3, color = "red", inherit.aes = FALSE) #+ ggsave("growth_rates_final.png", width = 15, height = 10, dpi = 300)
 
 
-## individual growth plots{
+## individual growth plots
+{
 Fist_21C_growth2 %>% 
   ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) +
@@ -137,7 +138,7 @@ Scen_8C_growth2 %>%
   ggplot(aes(x = factor(r_concentration, levels = concentration_order), y = estimate)) + 
   geom_point(col = "black", shape = 1, alpha = 0.6) +
   xlab("Phosphate concentration (uM)")
-}
+
 fit_model <- function(all_merged_growth2) {
   nls(estimate ~ umax * (r_concentration / (ks + r_concentration)),
       data = all_merged_growth2,
@@ -156,7 +157,7 @@ coefficients <- models %>%
             ks = coef(model)["ks"],
             umax = coef(model)["umax"])
 summary(coefficients)
-
+}
 ## mod code from joey 
 {
   mod1 <- nls(estimate ~ umax* (r_concentration / (ks+ r_concentration)),
@@ -345,9 +346,44 @@ preds4 <- bind_cols(growth_sum_p2, preds2)%>%
          "r_concentration" = r_concentration_7)
 
 #DOUBLE CHECK - bootstrap to all the variables 
-#
+install.packages("boot")
+install.packages("car")
+install.packages("rTPC")
+install.packages("nls.multstart")
+library(boot)
+library(car)
+library(rTPC)
+library(nls.multstart)
+library(patchwork)
+library(minpack.lm)
+
+fit_model2 <- growth_sum_p2 %>%
+  mutate(r_concentration = as.numeric(r_concentration)) %>% 
+  #rename(estimate = mu) %>% 
+  group_by(file_name) %>% 
+  nls(mu ~ umax * (r_concentration / (ks + r_concentration)),
+      data = .,
+      start = list(ks = 0.5, umax = 0.5),
+      algorithm = "port",
+      control = nls.control(maxiter = 500, minFactor = 1/204800000))
+
+
+
+fit_model <- nls(mu ~ umax * (r_concentration / (ks + r_concentration)),
+                 data = preds4,
+                 start = list(ks = 0.5, umax = 0.5),
+                 algorithm = "port",
+                 control = nls.control(maxiter = 500, minFactor = 1/204800000))
+class(fit_model)
+
+library(tidymodels)
+install.packages("tidymodels")
+
+# bootstrap using case resampling
+boot1 <- Boot(fit_nlsLM, method = 'case')
+
 preds4 %>%
-  #mutate(r_concentration = as.character(r_concentration)) %>%  # Convert to character to match order
+  mutate(r_concentration = as.numeric(r_concentration)) %>%  
   ggplot(aes(x = r_concentration, y = estimate)) + 
   geom_point() +
   geom_smooth(method = "nls", formula = y ~ umax * (x / (ks + x)),
@@ -355,7 +391,7 @@ preds4 %>%
               se = FALSE) +
   facet_wrap(~ file_name, scales = "free") +
   geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
-  geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "red", size = 1) +
+  geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "blue", size = 1) +
   ylab("Exponential growth rate (/day)") + 
   xlab("Phosphate concentration (uM)") 
 
