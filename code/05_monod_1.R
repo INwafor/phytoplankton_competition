@@ -263,6 +263,8 @@ scen_growth_rates %>%
 # growth rates with growthTools  -------------------------------------------
 library(growthTools)
 
+##redo this to have one per well?
+
 str(rfu_df)
 
 rfu_df <- rfu_df %>%
@@ -289,7 +291,7 @@ res <- lapply(split_data, function(rfu_df) {
 #this makes only one colmumn how to fix so it still is joined ot everyhting 
 growth_rates_p <- rfu_df %>%
   mutate(ln.fluor = log(RFU)) %>% 
-  group_by(file_name, r_concentration) %>%
+  group_by(file_name, r_concentration, well) %>%
   filter(r_concentration >= 0.5) %>% 
   do(grs=get.growth.rate(x=.$time_elapsed_units, y=.$ln.fluor,id=.$file_name,plot.best.Q=T))
 
@@ -340,10 +342,10 @@ preds2 <- growth_sum_p2 %>%
 
 preds4 <- bind_cols(growth_sum_p2, preds2)%>%
   clean_names() %>%
-  select(-file_name_6,
-         -r_concentration_5) %>%
+  select(-file_name_7,
+         -r_concentration_8) %>%
   rename("file_name" = file_name_1,
-         "r_concentration" = r_concentration_7)
+         "r_concentration" = r_concentration_5)
 
 #DOUBLE CHECK - bootstrap to all the variables 
 install.packages("boot")
