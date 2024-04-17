@@ -32,38 +32,32 @@ preds_subset %>%
   facet_wrap(~ file_name, scales = "free") +
   #geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
   geom_line(data = preds_subset, aes(x = r_concentration, y = fitted), color = "#3288bd", size = 1) +
+  # geom_hline(yintercept = 0.1, linetype = "dashed", color = "black") +
   ylab("Exponential growth rate (/day)") + 
   xlab("Phosphate concentration (uM)") 
 
-#set mortality rate and R*?
-
 ## bootstrapping from rtpc trial 3
+install.packages("minpack.lm")
+library(minpack.lm)
 
-# fit Sharpe-Schoolfield model - why would i fit to this model? 
-d_fit <- nest(preds4, data = c(r_concentration, estimate)) %>%
-  mutate(sharpeschoolhigh = map(data, ~nls_multstart(estimate~sharpeschoolhigh_1981(r_concentration = r_tref,e,eh,th, tref = 15),
-                                                     data = .x,
-                                                     iter = c(3,3,3,3),
-                                                     start_lower = get_start_vals(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981') - 10,
-                                                     start_upper = get_start_vals(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981') + 10,
-                                                     lower = get_lower_lims(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981'),
-                                                     upper = get_upper_lims(.x$temp, .x$rate, model_name = 'sharpeschoolhigh_1981'),
-                                                     supp_errors = 'Y',
-                                                     convergence_count = FALSE)),
-         # create new temperature data
-         new_data = map(data, ~tibble(temp = seq(min(.x$temp), max(.x$temp), length.out = 100))),
-         # predict over that data,
-         preds =  map2(sharpeschoolhigh, new_data, ~augment(.x, newdata = .y)))
+class(fit_model2) # this is a nls model 
 
-# unnest predictions
-d_preds <- select(d_fit, preds) %>%
-  unnest(preds)
+bootstrap_nls <- function(data, n_bootstraps) {
+  bootstrapped_coefs <- replicate(1000, {
+    boot_data <- preds4[sample(nrow(preds4), replace = TRUE), ]
+    fitted_model <- fit_nls_model(boot_data)
+    coef(fitted_model)
+  }, simplify = FALSE)
+  return(bootstrapped_coefs)
+}
 
-# plot data and predictions
-ggplot() +
-  geom_line(aes(temp, .fitted), d_preds, col = 'blue') +
-  geom_point(aes(temp, rate), d, size = 2, alpha = 0.5) +
-  theme_bw(base_size = 12) +
-  labs(x = 'Temperature (ºC)',
-       y = 'Growth rate',
-       title = 'Growth rate across temperatures')
+boot_result <- bootstrap_nls(preds4, n_bootstraps = 1000)
+
+boot_ci <- t(apply(boot_result, 2, quantile, c(0.025, 0.975)))  
+
+#boot_ci <- boot.ci(boot_result, type = "basic") 
+colnames(boot_ci) <- c("2.5%", "97.5%")
+boot_ci
+
+
+

@@ -359,7 +359,7 @@ library(nls.multstart)
 library(patchwork)
 library(minpack.lm)
 
-fit_model2 <- growth_sum_p2 %>%
+fit_model2 <- preds4 %>%
   mutate(r_concentration = as.numeric(r_concentration)) %>% 
   #rename(estimate = mu) %>% 
   group_by(file_name) %>% 
@@ -367,8 +367,8 @@ fit_model2 <- growth_sum_p2 %>%
       data = .,
       start = list(ks = 0.5, umax = 0.5),
       algorithm = "port",
-      control = nls.control(maxiter = 500, minFactor = 1/204800000))
-
+      control = nls.control(maxiter = 500, minFactor = 1/204800000),
+      return(coef(fit)))
 
 
 fit_model <- nls(mu ~ umax * (r_concentration / (ks + r_concentration)),
