@@ -29,7 +29,7 @@ preds4 %>%
   geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
   geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "#9e0142", size = 1) +
   ylab("Exponential growth rate (/day)") + 
-  xlab("Phosphate concentration (uM)") +
+  xlab("Phosphate concentration (uM)")
  # geom_ribbon(data = all_bootCI_df, aes(x = File_Name, ymin = CI.2.5., ymax = CI.97.5.), alpha = 0.3)
 
 
@@ -153,9 +153,17 @@ all_bootCI_df %>%
   geom_point(size = 4) +
   #facet_wrap(~parameters) +
   geom_errorbar(aes(ymin= CI.2.5., ymax= CI.97.5.), width=.2) +
-  labs(x = 'estimate',
-       y = 'treatment') +
+  labs(x = 'treatment',
+       y = 'estimate') +
   scale_color_manual(values = c(ks = "#9e0142", umax = "sienna1"))
+
+parameters <- row.names(all_bootCI_df)
+
+newdf <- cbind(parameters, all_bootCI_df) %>% 
+  mutate(parameters2 = parameters) %>%
+  mutate(parameters2 = ifelse(grepl("ks", parameters2)), yes = "ks", no = "umax")
+
+
 
 # c("#9e0142","sienna1","#fbcf51","#4bc425","#3288bd","#5e4fa2")
 
