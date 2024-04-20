@@ -38,6 +38,7 @@ custom_order <- c(0.00, 0.73, 0.93, 1.09, 1.84, 1.98, 2.18, 2.88, 3.04, 3.18)
 library(dplyr)
 library(RColorBrewer)
 
+##axis labels
 rfu_df %>% 
   filter(day > 0) %>% 
   ggplot(aes(x = time_elapsed_units, y = log(RFU), color = factor(r_concentration), group = file_name)) + 
@@ -46,14 +47,14 @@ rfu_df %>%
   facet_wrap(file_name ~ r_concentration, scales = "free_y") + 
   scale_color_manual(
     values = c("hotpink4", "#9e0142","#d53e4f","sienna1","#fbcf51","#4bc425","#66c2a5","#3288bd","#5e4fa2","hotpink")) +
-  ylab("") + 
-  xlab("") +
+  ylab("log(RFU") + 
+  xlab("time elapsed (unit of days)") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 9),
         axis.text.y = element_text(size = 8),
         strip.text = element_text(size = 8),         
         panel.spacing = unit(1, "lines"),
         panel.grid.major = element_line(color = "gray", linetype = "dotted"),
-        legend.position = "none") #+ ggsave("rfu_final4.png", width = 15, height = 10, dpi = 300)
+        legend.position = "none") #+ ggsave("rfu_final5.png", width = 15, height = 10, dpi = 300)
 
 
 phosphate_exp <- rfu_df %>% 
