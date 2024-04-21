@@ -26,12 +26,29 @@ preds4 %>%
               method.args = list(start = list(umax = 0.5, ks = 0.5)),
               se = FALSE) +
   facet_wrap(~ file_name, scales = "free") +
-  geom_errorbar(aes(ymin=estimate-best_se, ymax=estimate + best_se), width=.2) + 
+  geom_errorbar(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = .2) + 
   geom_line(data = preds4, aes(x = r_concentration, y = fitted), color = "#9e0142", size = 1) +
   ylab("Exponential growth rate (/day)") + 
-  xlab("Phosphate concentration (uM)")
- # geom_ribbon(data = all_bootCI_df, aes(x = File_Name, ymin = CI.2.5., ymax = CI.97.5.), alpha = 0.3)
+  xlab("Phosphate concentration (uM)") +
+  geom_ribbon(data = newdf, aes(x = r_concentration, ymin = CI.2.5., ymax = CI.97.5., fill = parameters), alpha = 0.3)
 
+merged_data <- preds4 %>%
+  left_join(newdf, by = "file_name")
+
+# Plot the merged data
+merged_data %>%
+  mutate(r_concentration = as.numeric(r_concentration)) %>%  
+  ggplot(aes(x = r_concentration, y = estimate)) + 
+  geom_point() +
+  geom_smooth(method = "nls", formula = y ~ umax * (x / (ks + x)),
+              method.args = list(start = list(umax = 0.5, ks = 0.5)),
+              se = FALSE) +
+  facet_wrap(~ file_name, scales = "free") +
+  geom_errorbar(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = .2) + 
+  geom_line(aes(x = r_concentration, y = fitted), color = "#9e0142", size = 1.5) +
+  #geom_ribbon(aes(ymin = estimate - best_se, ymax = estimate + best_se), width = .2) +
+  ylab("Exponential growth rate (/day)") + 
+  xlab("Phosphate concentration (uM)")
 
 ## bootstrapping from rtpc trial 3
 install.packages("minpack.lm")
@@ -160,9 +177,20 @@ all_bootCI_df %>%
 parameters <- row.names(all_bootCI_df)
 
 newdf <- cbind(parameters, all_bootCI_df) %>% 
-  mutate(parameters2 = parameters) %>%
-  mutate(parameters2 = ifelse(grepl("ks", parameters2)), yes = "ks", no = "umax")
+  clean_names()
 
+newdf[newdf == "ks1"| newdf == "ks2"| newdf == "ks3"| newdf == "ks4"| newdf == "ks5"] <- "ks"
+newdf[newdf == "umax1"| newdf == "umax2"| newdf == "umax3"| newdf == "umax4"| newdf == "umax5"] <- "umax"
+
+newdf %>%
+  #filter(File_Name != "Fist_8C") %>%
+  ggplot(aes(x = File_Name, y = CI.Median, colour = parameters)) +
+  geom_point(size = 4) +
+  facet_wrap(~parameters, scales = "free_y") +
+  geom_errorbar(aes(ymin= CI.2.5., ymax= CI.97.5.), width=.2) +
+  labs(x = 'treatment',
+       y = 'estimate') +
+  scale_color_manual(values = c(ks = "sienna1", umax = "#5e4fa2"))
 
 
 # c("#9e0142","sienna1","#fbcf51","#4bc425","#3288bd","#5e4fa2")

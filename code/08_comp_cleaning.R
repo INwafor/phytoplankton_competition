@@ -131,6 +131,21 @@ model_2 <- aov(green_algae_ug ~ temp, data = comp)
 tukey_results2 <- TukeyHSD(model_2)
 view(tukey_results2)
 
+#make a comp 21 dataframe
+comp21 <- comp %>%
+  filter(temperature == "21C")
+
+t.test(comp21$green_algae_ml, comp21$diatom_ml)
+
+comp21$green_algae_ml <- factor(comp21$green_algae_ml)
+comp21$diatom_ml <- factor(comp21$diatom_ml)
+mod3 <- aov(tot_density_ml ~ green_algae_ml, data = comp21)
+mod3 <- aov(green_algae_ml ~ diatom_ml, data = comp21)
+tuk21 <- TukeyHSD(mod3)
+
+tuk21 <- TukeyHSD(mod3, conf.level = .95)
+view(tuk21)
+
 model_g <- aov(diatom_ug ~ temp, data = comp)
 tukey_results <- TukeyHSD(model_g)
 

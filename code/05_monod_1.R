@@ -556,10 +556,10 @@ rstars_a <- rstars_a %>%
 rstars_a %>%
   group_by(file_name) %>%
   summarise_each(funs(mean, std.error), rstar_solve) %>%
-  ggplot(aes(x = reorder(file_name, mean), y = mean)) +
+  ggplot(aes(x = file_name, y = mean)) +
   geom_point(size = 4, aes(color = file_name)) +  # Increase point size and match colors to file_name
   geom_errorbar(aes(ymin = mean - std.error, ymax = mean + std.error), width = 0.1) +
-  geom_text(aes(label = round(mean, 2)), vjust = 2, size = 3.5, color = "black") + 
+  geom_text(aes(label = round(mean, 3)), vjust = 2, size = 3.5, color = "black") + 
   scale_color_manual(
     values = c("#9e0142","#fbcf51","#4bc425","#3288bd","#d7a4dd")) +
   labs(y = "R* (umol P)", x = "Treatment", color = "Treatment") +
@@ -567,6 +567,6 @@ rstars_a %>%
   theme(panel.grid.major = element_line(color = "gray", linetype = "dashed"),
         panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 8)) +
-  ylim(-0.1, 0.2) 
-# ggsave(filename = file.path("figures","rstar_final.png"), width = 15, height = 10)
+  ylim(-0.1, 0.2)  
+#ggsave(filename = file.path("figures","rstar_final1.png"), width = 15, height = 10)
 
