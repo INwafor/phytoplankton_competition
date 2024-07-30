@@ -12,18 +12,37 @@ library(purrr)
 library(fs)
 
 ##starting with static vs shaking data 
-#import folder and files 
-
-platemap<- read_excel("Input_RFU/Acclimation_Trial_8d_Plates/platemap/plate_map.xlsx", col_names = T)
+#amandas plate map input 
+platemap<- read_excel("data/plate_map.xlsx", col_names = T)
 platemaplong<- platemap %>% gather(2:13, key="Column", value = "ID")
 platemapwithcellid<- platemaplong %>%  unite (1:2,sep= "", col= "position" )
 
-raw<- list.files(path = "Input_RFU/Acclimation_Trial_8d_Plates", pattern = "xlsx")
+#static data
+s_raw<- list.files(path = "data-raw/static-shaking", pattern = "xlsx")
 
-RFU_files2 <- c(list.files("data/rstar2_dataraw", full.names = TRUE))
 
-RFU_files2 <- RFU_files2[grepl(".xls", RFU_files2)]
 
-names(RFU_files2) <- RFU_files2 %>% 
+
+all_plates <- map_df(s_raw, read_excel, range = "A1:M9", .id = "file_name")
+
+%>%
+  rename(row = ...1) %>% 
+  mutate(file_name = str_replace(file_name, " ", "")) %>%
+  separate(file_name, into = c("data", "location", "loc_2", "file_name", "temp", "read"), remove = FALSE)%>%
+  select(-data,
+         -location,
+         -loc_2)
+
+all_plates <- unite(all_plates, file_name, c(file_name, temp, read))
+
+all_times <- map_df(RFU_files, read_excel, range = "A7:A8", .id = "file_name") %>% 
+  clean_names()
+
+#tpc test
+tpc_raw <- c(list.files("data-raw/tpc-test1", full.names = TRUE))
+
+tpc_raw <- tpc_raw[grepl(".xls", tpc_raw)]
+
+names(tpc_raw) <- tpc_raw %>% 
   gsub(pattern = ".xlsx$", replacement = "") %>% 
   gsub(pattern = ".xls$", replacement = "")
