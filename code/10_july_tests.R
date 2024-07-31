@@ -20,12 +20,14 @@ platemapwithcellid<- platemaplong %>%  unite (1:2,sep= "", col= "position" )
 #static data
 s_raw<- list.files(path = "data-raw/static-shaking", pattern = "xlsx")
 
+# need to do time manually - next time redo and download the way Amanda does + without template on protocol
+
+all_plates <- map_df(s_raw, read_excel, range = "A1:M9")
 
 
+file.l
 
-all_plates <- map_df(s_raw, read_excel, range = "A1:M9", .id = "file_name")
 
-%>%
   rename(row = ...1) %>% 
   mutate(file_name = str_replace(file_name, " ", "")) %>%
   separate(file_name, into = c("data", "location", "loc_2", "file_name", "temp", "read"), remove = FALSE)%>%
