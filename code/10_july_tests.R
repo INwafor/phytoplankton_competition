@@ -71,8 +71,14 @@ shaking %>%
   geom_smooth(method = "loess", se = FALSE) +
   facet_wrap(~treatment, scales = "free_y")
 
-##need to assign algae to clammy scen and fist 
-# if well = E and treatment = alage then change treatment to = clammy 
+static <- ss_mergedt %>%
+  filter(grepl("static", name))
+
+static %>%
+  ggplot(aes(x = time_passed, y = rfu, group = well)) + 
+  geom_point(col = "black", shape = 1, alpha = 0.6) + 
+  geom_smooth(method = "loess", se = FALSE) +
+  facet_wrap(~treatment, scales = "free_y")
 
 #tpc test
 tpc_raw <- c(list.files("data-raw/tpc-test1", full.names = TRUE))
@@ -83,18 +89,7 @@ names(tpc_raw) <- tpc_raw %>%
   gsub(pattern = ".xlsx$", replacement = "") %>% 
   gsub(pattern = ".xls$", replacement = "")
 
+tpc_template <- read_excel("data/plate_template.xlsx", sheet = "tpc_plate")
+tpc_template <- ss_template[!(row.names(ss_template) %in% c("1")),]
 
-s_raw<- list.files(path = "data-raw/static-shaking", pattern = "xlsx")
-
-# need to do time manually - next time redo and download the way Amanda does + without template on protocol
-ss_template <- read_excel("data/plate_template.xlsx", sheet = "shake-static")
-ss_template <- ss_template[!(row.names(ss_template) %in% c("1")),]
-
-s_files <- c(list.files("data-raw/static-shaking", full.names = TRUE))
-
-s_files <- s_files[grepl(".xls", s_files)]
-
-names(s_files) <- s_files %>% 
-  gsub(pattern = ".xlsx$", replacement = "") %>% 
-  gsub(pattern = ".xls$", replacement = "")
 
