@@ -42,13 +42,24 @@ all_plates <- map_df(s_files, read_excel, .id = "file_name")%>%
          -s2,
          -...14)
 
-#all_merged2 <- left_join(all_temp_RFU, plate_layout, by = "well")
+all_plates <- unite(all_plates, file_name, c(file_name, read)) %>%
+  filter(!grepl("H", row))
+
+## not exactly
+allp <- all_plates %>% 
+  gather(key = well, value = rfu, 3:14) %>%
+  mutate(row = as.character(row))%>%
+  unite(row, c(row, well))%>% 
+  rename(Well = row)
+
+allp$Well <- gsub("_", "", allp$Well)
+
+## now we add in the ss_template
+ss_merged<- left_join(allp, ss_template, by = "Well")
+
+##now add in the timing by read - separate file name into name_read and add in time
 
 
-all_plates <- unite(all_plates, file_name, c(file_name, temp, read))
-
-all_times <- map_df(RFU_files, read_excel, range = "A7:A8", .id = "file_name") %>% 
-  clean_names()
 
 #tpc test
 tpc_raw <- c(list.files("data-raw/tpc-test1", full.names = TRUE))
