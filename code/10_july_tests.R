@@ -55,9 +55,18 @@ allp <- all_plates %>%
 allp$Well <- gsub("_", "", allp$Well)
 
 ## now we add in the ss_template
-ss_merged<- left_join(allp, ss_template, by = "Well")
+ss_merged<- left_join(allp, ss_template, by = "Well")%>%
+  separate(file_name, into = c("name", "read"), remove = FALSE)
 
 ##now add in the timing by read - separate file name into name_read and add in time
+
+sstime <- read_excel("data/tpc3-time .xlsx", sheet = "shaker") %>%
+  select(-time)
+
+ss_mergedt <- left_join(ss_merged, sstime, by = "read") %>%
+  unite(file_name, c(name, read))
+
+#Now can plot out by shaker vs. static 
 
 
 
