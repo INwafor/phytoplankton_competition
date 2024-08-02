@@ -92,4 +92,4 @@ names(tpc_raw) <- tpc_raw %>%
 tpc_template <- read_excel("data/plate_template.xlsx", sheet = "tpc_plate")
 tpc_template <- ss_template[!(row.names(ss_template) %in% c("1")),]
 
-
+## did not finish due to issues with ways files downloaded differently - too much organization needed :)
