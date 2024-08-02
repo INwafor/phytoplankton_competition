@@ -1,5 +1,5 @@
 #IEN - august 1st 
-#
+#first growth curve for scen/fist at 25C for TPC
 
 library(readxl)
 library(tidyverse)
@@ -36,6 +36,9 @@ tpc3_plates <- map_df(tpc3_raw, read_excel, .id = "file_name")%>%
          -s1,
          -...14) %>%
   unite(file_name, c(file_name, read))
+
+#merge row and "-" for scen_08
+#remove rows 41 and 42 - remove any rows with an NA 
 
 
 allp <- all_plates %>% 
