@@ -73,11 +73,4 @@ shaking %>%
   facet_wrap(~treatment, scales = "free_y")
 
 
-library(readxl)
-library(tidyverse)
-sheet1 <- read_excel("data/sequence.xlsx", sheet = 1)
-sheet2 <- read_excel("data/sequence.xlsx", sheet = 2)
 
-plate_layout <- left_join(sheet1, sheet2, by = c("sequence"))
-View(plate_layout)
-write_csv(plate_layout, "platelayout.csv")
