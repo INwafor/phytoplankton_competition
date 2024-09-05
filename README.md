@@ -1,5 +1,5 @@
 # phytoplankton_competition
-Undergraduate thesis project, 2023/2024
+Undergraduate thesis project, 2023 - 2025
 
 Ijeoma Nwafor
 
